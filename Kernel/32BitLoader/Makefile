@@ -1,4 +1,4 @@
-TARGET_PATH = ~/.VirtualBox/TFTP/cocOS32.bin
+TARGET_PATH = /var/lib/tftpboot/cocOS32.bin
 CC = gcc-4.1
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror

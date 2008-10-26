@@ -18,23 +18,14 @@
 void kernel_main (uint32_t magic, multiboot_header_t *multiboot_header)
 {
     io_init();
-    io_print_line("cocOS32 version 0.1 loading...");
+    io_print_line("cocOS32 version 2008 (build 0001) loading...");
 
     /* Alright, let's get moving. What we do now is set up basic data structures to be able to activate the ultra-cool amd64
-       "long mode". :-) */
-    /* But first, detect that the CPU is actually a 64-bit CPU and not some stupid 32-bit one. ;-) */
-    _64bit_detect();
+       "long mode". :-) But first, detect that the CPU is actually a 64-bit CPU.
 
-    /* Prepare for 64-bit interrupt handling. */
-    interrupt_init();
+       Initially, I had thought about doing it in a bunch of C functions but it's actually more elegant to do it all in one
+       single assembly function. 
 
-    /* Setup the 64-bit GDT (global descriptor table) and TSS (task switch segment). */
-    gdt_init();
-    tss_init();
-
-    /* Setup 64-bit paging. */
-    paging_init();
-
-    /* All set -- initialize long mode! This function will never return. */
+       Because of its nature, this function will never return. If 64-bit initialization fails, it will halt the CPU. */
     _64bit_init();
 }
