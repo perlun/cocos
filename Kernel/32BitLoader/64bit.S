@@ -12,7 +12,7 @@
         // This code is more or less a rip-off of the sample code in the AMD64 Architecture Programmers Manual, Volume 2. 
         // (page 361 and onwards). What I've done is minor modifications.
         
-_64bit_init:     
+_64bit_init:
 
         // First, detect a 64-bit CPU.
         mov     eax, 0x80000000         // Extended function 0x80000000
@@ -101,26 +101,49 @@ has_long_mode:
 
         // We are now in 32-bit "compatibility mode". Let's do one more thing before jumping into 64-bit mode:  Set up
         // a new GDT, Global Descriptor Table. First, copy it over to its designated place.
-        mov     esi, dword ptr gdt
-        mov     edi, [gdt_pointer + 6]
-        xor     ecx, ecx
-        mov     cx, [gdt_pointer]
-        rep     movsb
+        /* FIXME: This doesn't work, for some reason... Anyway, we leave it like this
+           for now. This means the GDT will be in the 32-bit kernel data area, so we can't just wipe it later without
+           pretty fatal consequences. */
+/*      mov     esi, dword ptr gdt
+        mov     edi, 0x1000
+        mov     ecx, 8 * 3
+        rep     movsb */
        
         // ...then, load the GDTR register.
         lgdt    gdt_pointer
 
-        stop:   jmp     stop
-                                
-        // Now, let's jump into the 64-bit code segment. The offset here must be
-	// equal to the linear address of the 64-bit entry point, because 64-bit code is in an unsegmented address space.
-        // The selector should point to a 32/64-bit code selector in the current GDT.
-//      ljmpw   $0x0, $0x0
-        .byte   0x66                    // Opcode prefix to let the CPU know that this is a 64-bit instruction. 
-        .byte   0xEA
-        .int    0                       // FIXME: 64 bit entry point here...
-        .short  0                       // FIXME: 64-bit code selector here. 
+        // Now, let's jump into the 64-bit code segment. This one is a bit tricky to have GAS assemble correctly so
+        // we hardcode the opcodes instead. :)
+        .byte   0xEA                    // jmp far
+        .long   _64bit_entry_point
+        .word   8                       // 64-bit code selector. Shift off the last 3 bits of this and you get the
+                                        // index of the selector in the GDT.
 
+        .code64
+_64bit_entry_point:
+        mov     edi, 0x00b8000 + (80 * 2)
+        mov     rcx, 10
+        
+_64loop:
+        mov     rax, 0x0720077407750750
+        mov     [edi], rax
+        mov     rax, 0x0767076e076f076c
+        mov     [edi + 8], rax
+        mov     rax, 0x0764076f076d0720
+        mov     [edi + 16], rax
+        mov     rax, 0x0765076b07200765
+        mov     [edi + 24], rax
+        mov     rax, 0x076c0765076e0772
+        mov     [edi + 32], rax
+        mov     rax, 0x0772076507680720
+        mov     [edi + 40], rax
+        mov     rax, 0x07200720072e0765
+        mov     [edi + 48], rax
+        add     edi, 80 * 2 + 4         // For a cool text-mode effect. :)
+        
+        loop    _64loop
+        jmp     $
+        
         .data
 _32bit_cpu_message:      
         .asciz  "The CPU does not support 64-bit mode. Kernel halted."
@@ -131,15 +154,14 @@ pml4_base:
 
         // Reference to the gdt , which we load so we can perform the jump into hyperspace... ehh, I mean, 64-bit code. :-)
         // We set the limit to 0xFFFF = 
-.align  8
 gdt_pointer:
         .word   3 * 8                   // The size of the GDT, in bytes. We only need three descriptors à 8 bytes.
-        .quad   0x0000000000001000     // The location of the GDT. We place it at the second page in memory (4 KiB).
-
-gdt:    .quad   0x0000000000000000      // Null selector.
-        .quad   0x0020980000000000      // Code selector.
-                                        // FIXME: having this hardwired like this makes it extremely ugly and hard to
-                                        // see what this says... Perhaps we should even create the GDT from a C function
-                                        // to make it more obvious what it does.
-        .quad   0x0000900000000000      // Data selector.
+        .long   gdt                     // The location of the GDT. We place it at the second page in memory (4 KiB).
+        //.long   0x1000               // This one doesn't work, as mentioned earlier.
+        
+        // FIXME: having these hardwired like this makes it extremely ugly and hard to see what this says... Perhaps we
+	// should even create the GDT from a C function to make it more obvious what they look like.
+gdt:    .quad   0x0000000000000000      // Null descriptor.
+        .quad   0x0020980000000000      // Code descriptor..
+        .quad   0x0000900000000000      // Data descriptor..
         
