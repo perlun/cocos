@@ -99,20 +99,19 @@ has_long_mode:
         bts     eax, 31                 //  Set PE = 1
         mov     cr0, eax
 
-        // Somewhere between here and the "stop" line, we crash...
-               
         // We are now in 32-bit "compatibility mode". Let's do one more thing before jumping into 64-bit mode:  Set up
         // a new GDT, Global Descriptor Table. First, copy it over to its designated place.
+        mov     esi, dword ptr gdt
         mov     edi, [gdt_pointer + 6]
         xor     ecx, ecx
         mov     cx, [gdt_pointer]
         rep     movsb
-
-stop:   jmp     stop
-        
+       
         // ...then, load the GDTR register.
         lgdt    gdt_pointer
-                        
+
+        stop:   jmp     stop
+                                
         // Now, let's jump into the 64-bit code segment. The offset here must be
 	// equal to the linear address of the 64-bit entry point, because 64-bit code is in an unsegmented address space.
         // The selector should point to a 32/64-bit code selector in the current GDT.
