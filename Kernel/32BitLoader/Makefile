@@ -1,3 +1,10 @@
+#
+# $Id$
+#
+# This is the makefile for the 32-bit loader part of the cosmos kernel.
+# Author: Per Lundberg <per@halleluja.nu>
+#
+
 TARGET_PATH = /var/lib/tftpboot/cocOS32.bin
 CC = gcc-4.1
 INSTALL = install
