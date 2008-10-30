@@ -5,10 +5,10 @@
 # Author: Per Lundberg <per@halleluja.nu>
 #
 
-TARGET_PATH = /var/lib/tftpboot/cocOS32.bin
+TARGET_PATH = /var/lib/tftpboot
 CC = gcc-4.1
 INSTALL = install
-AS_FLAGS = -c -m32 -Wall -Werror
+AS_FLAGS = -c -m32 -Wall -Werror -Wno-main
 CFLAGS = $(AS_FLAGS) --std=gnu99
 LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000
 
@@ -16,7 +16,7 @@ LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000
 
 LINK = $(CC)
 KERNEL = cocOS32.bin
-KERNEL_OBJS = start.o io.o 64bit.o interrupt.o gdt.o tss.o paging.o main.o
+KERNEL_OBJS = start.o io.o 64bit.o main.o
 
 all: $(KERNEL)
 

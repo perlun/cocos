@@ -1,8 +1,16 @@
-/* 64bit.S - code for entering 64-bit mode. */
-/* Copyright (C) 2008  Per Lundberg */
+/*
+ * $Id$
+ *
+ * 64bit.S - code for entering 64-bit mode.
+ *
+ * Author: Per Lundberg <per@halleluja.nu> 
+ */
 
+#include "64bit.h"
+        
         .text
-
+        .code32
+        
         // This makes GNU assembler behave a bit more like MASM, TASM and NASM -- in other words, conventional x86
 	// assemblers.
         .intel_syntax noprefix
@@ -26,7 +34,7 @@ _64bit_init:
         jmp     has_long_mode
 
 no_long_mode:
-        push    dword ptr _32bit_cpu_message
+        push    dword ptr _non64bit_cpu_message
         call    io_print_line
 halt:   jmp     halt
 
@@ -121,33 +129,37 @@ has_long_mode:
 
         .code64
 _64bit_entry_point:
+        // Print a simple message indicating that the 64-bit initialization was successful.
         mov     edi, 0x00b8000 + (80 * 2)
-        mov     rcx, 10
+        //mov     esi, _64bit_initialized_message
+        jmp     _end_of_64print_loop
         
-_64loop:
-        mov     rax, 0x0720077407750750
-        mov     [edi], rax
-        mov     rax, 0x0767076e076f076c
-        mov     [edi + 8], rax
-        mov     rax, 0x0764076f076d0720
-        mov     [edi + 16], rax
-        mov     rax, 0x0765076b07200765
-        mov     [edi + 24], rax
-        mov     rax, 0x076c0765076e0772
-        mov     [edi + 32], rax
-        mov     rax, 0x0772076507680720
-        mov     [edi + 40], rax
-        mov     rax, 0x07200720072e0765
-        mov     [edi + 48], rax
-        add     edi, 80 * 2 + 4         // For a cool text-mode effect. :)
+_64print_loop:
+        lodsb
+        jz        _end_of_64print_loop
+        stosb
+        jmp     _64print_loop
+
+_end_of_64print_loop:   
         
-        loop    _64loop
-        jmp     $
+        // Now, call the 64-bit kernel. When this method (_64bit_init) was called, we received an argument that
+        // is a pointed to the Multiboot header. We want to pass this header on to the 64-bit kernel, so we do it
+        // as you would expect -- by pushing it onto the stack.
+        push    qword ptr [esp + 4]
+        mov     rdi, _64BIT_KERNEL_ENTRY_POINT
+//        mov     byte ptr [rdi], 0xEB
+//        mov     byte ptr [rdi + 1], 0xFE
         
+        mov     rax, _64BIT_KERNEL_ENTRY_POINT          // We can't just call this address directly, there doesn't seem
+        call    rax                                     // to be such an instruction... so we go via a register.
+                    
         .data
-_32bit_cpu_message:      
+_non64bit_cpu_message:      
         .asciz  "The CPU does not support 64-bit mode. Kernel halted."
 
+_64bit_initialized_message:
+        .asciz  "64-bit mode successfully initialized."
+        
         // PML4 page tables are placed here.
 pml4_base:
         .fill   512, 4, 0

@@ -2,8 +2,10 @@
 /* Copyright (C) 2008  Per Lundberg */
 
 #include "multiboot.h"      
-#include "kernel.h"
-                        
+
+        /* The size of our kernel stack (16 KiB, 4 x 4 KiB pages). */
+        #define STACK_SIZE			0x4000
+                         
         .text
         .globl start, _start
 
@@ -44,9 +46,8 @@ after_multiboot_header:
 	/* Push the boot loader magic value. (This is not the same as the MULTIBOOT_HEADER_MAGIC) */
 	pushl	%eax
 
-	/* Call the kernel_main function. The rest of the kernel is now done in C, with some functions implemented in
-           assembly language. */
-	call	kernel_main
+	/* Call the main function. (C entry point) */
+	call	main
 
         /* We should never get back here, but... let's create an infinite loop "just in case"... */
 halt:   jmp halt

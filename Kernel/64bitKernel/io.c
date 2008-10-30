@@ -14,7 +14,7 @@
 #define VIDEO_MEMORY_BASE               0xB8000
 
 /* The default attribute of a character printed by the kernel.  */
-#define KERNEL_DEFAULT_ATTRIBUTE        0x17 // BSD rocks. ;-)
+#define KERNEL_DEFAULT_ATTRIBUTE        0x07
 
 /* Types. */
 typedef struct
@@ -37,32 +37,35 @@ static volatile console_character_t *screen;
 static cursor_t cursor;
 
 /* The current attribute to write text with. */
-static uint8_t current_attribute = KERNEL_DEFAULT_ATTRIBUTE;
+//static uint8_t current_attribute = KERNEL_DEFAULT_ATTRIBUTE;
 
 /* Clear the screen and initialize the I/O variables. */
 void io_init(void)
 {
-    int i;
+    screen = (console_character_t *) VIDEO_MEMORY_BASE;
     
-    screen = (console_character_t *)VIDEO_MEMORY_BASE;
-    
-    // Clear the screen. Extremely inefficient method, yes. FIXME: use a memset() or similar here instead... can even be done
-    // using MMX if we really want it optimized. :-)
-    for (i = 0; i < SCREEN_COLUMNS * SCREEN_ROWS; i++)
-    {
-        screen[i].character = 0;
-        screen[i].attribute = 0;
-    }
-    
-    // Reset the cursor.
+    // The 32-bit kernel usually prints one line, so we start one line down...
     cursor.x = 0;
-    cursor.y = 0;
+    cursor.y = 1;
 }
 
 static void newline()
 {
     cursor.y++;
     cursor.x = 0;
+}
+
+static void io_sleep()
+{
+    // Obviously, this method of generating a delay is quite lousy, it should at least be calibrated somehow... Using I/O
+    // in() is probably a much better way if we want to do it at least a whee bit better :-)
+    for (int i = 0; i < 30000; i++)
+    {
+        int x = 42;
+        x++;
+        x--;
+        x = x * 23;
+    }
 }
 
 /* Print a string to the console. 
@@ -73,7 +76,17 @@ void io_print_line(const char *string)
     for (int i = 0; string[i] != '\0'; i++)
     {
         screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].character = string[i];
-        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].attribute = current_attribute;
+        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].attribute = 0x03;
+
+        io_sleep();
+
+        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].character = string[i];
+        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].attribute = 0x07;
+
+        io_sleep();
+
+        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].character = string[i];
+        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].attribute = 0x0F;
         cursor.x++;
 
         if (cursor.x == SCREEN_COLUMNS)

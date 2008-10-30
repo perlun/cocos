@@ -1,10 +1,5 @@
-/*
- * $Id$
- *
- * multiboot.h - Multiboot defines/constants and data structures.
- *
- * Author: Per Lundberg <per@halleluja.nu> 
- */
+/* multiboot.h - Multiboot defines/constants and data structures. */
+/* Copyright (C) 2008  Per Lundberg */
 
 /* This is to make sure that the assembly files can still include multiboot.h without getting compilation errors. */
 #ifndef __ASSEMBLER__
@@ -50,32 +45,16 @@ typedef struct
 /* The Multiboot information -- this data structure is passed to the kernel by the boot loader.  */
 typedef struct
 {
-    struct
-    {
-        uint32_t has_memory_info: 1;
-        uint32_t has_boot_device: 1;
-        uint32_t has_command_line: 1;
-        uint32_t has_module_info: 1;
-        uint32_t reserved: 28;  // We don't care about the rest of these, even though some can actually be used.
-    } flags;
+    uint32_t flags;
     uint32_t memory_lower;
     uint32_t memory_upper;
     uint32_t boot_device;
     uint32_t command_line;
     uint32_t modules_count;
-    uint32_t modules_info;
+    uint32_t modules_address;
     elf_section_header_table_t elf_section_header_table;
     uint32_t memory_map_length;
     uint32_t memory_map_address;
 } multiboot_info_t;
-
-/* The multiboot module info structure. If the module information is present, there is one of these for each module. */
-typedef struct
-{
-    uint32_t start;
-    uint32_t end;
-    uint32_t command_line;
-    uint32_t reserved;
-} multiboot_module_info_t;
 
 #endif /* !__ASSEMBLER__ */
