@@ -6,15 +6,19 @@
  * different arguments than the traditional C main()...
  *
  * Author: Per Lundberg <per@halleluja.nu>
+ * Copyright: (C) 2008 Per Lundberg
  */
 
 #include "io.h"
 #include "multiboot.h"
 
-void main(uint32_t magic, multiboot_info_t *multiboot_header)
+void main(multiboot_info_t *multiboot_header)
 {
     io_init();
-    io_print_line("cocOS64 version 2008 loading...");
+    io_leet_print("cocOS64 version 2008 loading...");
+    io_print("\n");
+
+    io_print_formatted("%X\n", multiboot_header);
 
     while (1 == 1);
 }

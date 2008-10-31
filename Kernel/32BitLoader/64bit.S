@@ -145,10 +145,7 @@ _end_of_64print_loop:
         // Now, call the 64-bit kernel. When this method (_64bit_init) was called, we received an argument that
         // is a pointed to the Multiboot header. We want to pass this header on to the 64-bit kernel, so we do it
         // as you would expect -- by pushing it onto the stack.
-        push    qword ptr [esp + 4]
-        mov     rdi, _64BIT_KERNEL_ENTRY_POINT
-//        mov     byte ptr [rdi], 0xEB
-//        mov     byte ptr [rdi + 1], 0xFE
+        push    0xC0CAC01A //qword ptr [esp + 4]
         
         mov     rax, _64BIT_KERNEL_ENTRY_POINT          // We can't just call this address directly, there doesn't seem
         call    rax                                     // to be such an instruction... so we go via a register.
