@@ -71,7 +71,7 @@ static void newline()
     }        
 }
 
-// Convert an uint32 to arbitrary base string format. The base can be anything between 2 (binary) and 36, since by then we
+// Convert an uint64 to arbitrary base string format. The base can be anything between 2 (binary) and 36, since by then we
 // have reached the end of the alphabet... (26 letters + 10 digits)
 static void number_to_string_uint64(uint64_t value, int base, char *output)
 {
@@ -316,7 +316,7 @@ void io_print_formatted(const char *format_string, ...)
                 {
                     char string[11];            // A 32-bit integer can be no longer than 10 decimal characters + a NUL
                                                 // terminator.
-                    number_to_string_uint32(va_arg(arguments, uint64_t), 2, string);
+                    number_to_string_uint32(va_arg(arguments, uint32_t), 2, string);
                     io_print(string);
                     break;
                 }
