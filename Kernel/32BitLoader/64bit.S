@@ -51,11 +51,11 @@ has_long_mode:
 
         // The page tables are placed at A000 (in other words, at 10 KiB) and they will look like this:
 
-        // PML4:
+        // Page Map Level 4:
         // dq 0x000000000000B00F		;00000000 00000000 00000000 00000000 00000000 00000000 10010000 00001111
         // times 511 dq 0x0000000000000000
 
-        // Page Directory:
+        // Page Directory Pointer:
         // dq 0x000000000000C00F		;00000000 00000000 00000000 00000000 00000000 00000000 10100000 00001111
         // times 511 dq 0x0000000000000000
 
@@ -110,8 +110,8 @@ has_long_mode:
         // We are now in 32-bit "compatibility mode". Let's do one more thing before jumping into 64-bit mode:  Set up
         // a new GDT, Global Descriptor Table. First, copy it over to its designated place.
         /* FIXME: This doesn't work, for some reason... Anyway, we leave it like this
-           for now. This means the GDT will be in the 32-bit kernel data area, so we can't just wipe it later without
-           pretty fatal consequences. */
+           for now. This means the GDT will be in the 32-bit kernel data area, so we can't just wipe it later before
+           we have established our own GDT in the proper place. */
 /*      mov     esi, dword ptr gdt
         mov     edi, 0x1000
         mov     ecx, 8 * 3
@@ -143,10 +143,18 @@ _64print_loop:
 _end_of_64print_loop:   
         
         // Now, call the 64-bit kernel. When this method (_64bit_init) was called, we received an argument that
-        // is a pointed to the Multiboot header. We want to pass this header on to the 64-bit kernel, so we do it
-        // as you would expect -- by pushing it onto the stack.
-        push    0xC0CAC01A //qword ptr [esp + 4]
-        
+        // is a pointed to the Multiboot header. We want to pass this header on to the 64-bit kernel. Now, for those of you
+        // who are a bit used to 32-bit assembly/low-level programming, here comes something new (at least it was for me):
+        // On amd64, you don't push integers on the stack. Instead, you pass it using a register. There is a list of the order
+        // of those registers specified in the System V ABI for AMD64, located at this URL:     
+        //
+        // http://www.x86-64.org/documentation/abi-0.99.pdf
+        //
+        // For now, we only need to know and accept that RDI is the first of those integer-parameter registers. :)
+        mov     edi, dword ptr [esp + 4]
+        and     edi, 0xFFFFFFFF                         // We just make 100% certain that the upper part of this register
+                                                        // doesn't contain any junk...
+                
         mov     rax, _64BIT_KERNEL_ENTRY_POINT          // We can't just call this address directly, there doesn't seem
         call    rax                                     // to be such an instruction... so we go via a register.
                     
@@ -157,10 +165,6 @@ _non64bit_cpu_message:
 _64bit_initialized_message:
         .asciz  "64-bit mode successfully initialized."
         
-        // PML4 page tables are placed here.
-pml4_base:
-        .fill   512, 4, 0
-
         // Reference to the gdt , which we load so we can perform the jump into hyperspace... ehh, I mean, 64-bit code. :-)
         // We set the limit to 0xFFFF = 
 gdt_pointer:
