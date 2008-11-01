@@ -54,9 +54,8 @@ void io_init()
 {
     screen = (console_character_t *) VIDEO_MEMORY_BASE;
     
-    // The 32-bit kernel usually prints one line, so we start one line down...
     cursor.x = 0;
-    cursor.y = 1;
+    cursor.y = 0;
 }
 
 // Print a newline.
