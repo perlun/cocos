@@ -1,0 +1,71 @@
+MemoryMap.txt ($Id$)
+=============
+
+This is the memory map/general VM theory for the cocOS architecture.
+
+General Concept and IA32 Background
+-----------------------------------
+
+Virtual Memory is a concept introduced (when speaking about the Intel line of CPU:s) with the 80386. In the 80386 (IA32)
+architecture, it is also called "paging". The memory is divided into physical "pages", normally with a size of 4096
+bytes. There is also a concept of "huge pages", which are 4 MiB large in the usual 80386 scenario.
+
+With the 80386 architecture, the Virtual Memory space is limited by the 32-bit addressing. Virtual Memory is addressed just
+like physical memory; in other words, using 32 address lines. This means that 4 GiB of physical memory can be adressed, and 4
+GiB of virtual memory *per process*.
+
+This latter statement is important. Since each process ("task" in Intel speak) can have its own memory map being set up
+(using per-task differentiated values for the CR3 register), each process can have a virtual memory space of up to 4 GiB
+which does not necessarily have to be identical to the virtual memory space of another process.
+
+This can be useful sometimes, with memory mapped files for example. But obviously, the 4 GiB physical/virtual limit can be
+limiting at times. Large RDBMS for example (relational database management systems), can pretty easily run into situations
+where you have a database that is larger than 4 GiB. Those databases can only be memory-mapped if the virtual memory limit is
+*larger* than the physical memory limit.
+
+There is also another problem with the 4 GiB virtual memory limit, namely this: For the kernel to be able to access the
+memory that belongs all the processes in the system (for example, if/when performing message-based IPC), it is highly
+convenient for the kernel to have all the physical memory being mapped in the virtual memory space. One way to do it is to
+"split" the virtual memory in two halves: 0-2 GiB is reserved for user programs, and 2-4 GiB is reserved for the kernel.
+
+There is only one "small" caveat with this. By doing so, you effectively limit the maximum memory size of the system to 2
+GiB, which is fairly small by todays standards.
+
+Both of these problems, which have the same general cause -- the virtual memory space is too little on the IA32 -- are solved
+by the x86-64 (hereafter referred to as the "AMD64" architecture).
+
+The AMD64 Architecture
+----------------------
+
+In the AMD64 architecture, those limits are raised. But not (yet) to the full 64-bit that one could expect. Instead, AMD (and
+Intel) has taken a more pragmatic approach, which probably wise since 64 full address lines would be a total waste of money
+(in producing the chips) and circuit space (in the CPU die). The physical and virtual address sizes are more "floating" than
+before. The machine that I am currently writing this text on has 36 physical address lines (allowing systems to access up to
+64 GiB of RAM, pretty much by the standards of this very day). The good thing about it, though, is that it has 48 virtual
+address lines. This means that there is no problem to have a *bunch* of programs mapping, say 10 GiB of virtual memory
+each. And the best thing of it all is that in the end, this 48-bit limit will be increased upwards, as a need arises.
+
+When the address space is limited to 48 bits, AMD has invented something called a "sign extension". This means that in the
+machines with 48 bits virtual addressing, bit 48-63 must be copies of bit 47.
+
+This means that in effect, there is a memory "hole", like this:
+
+00000000 00000000-00007FFF FFFFFFFF (Canonical "lower half", 128 TiB, terabyte)
+FFFF8000 00000000-FFFFFFFF FFFFFFFF (Canonical "upper half", 128 TiB)
+
+Now that we have the baseline set, we can go on to the cocOS-specific memory map.
+
+High-level Mappings
+-------------------
+
+* Physical VM (0-128 TiB). For convenience, the physical VM is "identity mapped". This means that to access memory at address
+  0xB8000, you create a pointer that points at 0xB8000 -- simple and beautiful. Demo/intro and other lowlevel/assembly coders
+  will love it! :-) Really, mapping this memory with a straight 1-to-1 mapping, where any physical memory address can be 
+  accessed in a really intuitive and simple way must be the best thinkable way to do it, in my imagination.
+
+* Process VM ("upper half", the very last 128 TiB of the 64-bit virtual address space). This memory is reserved for use by
+  processes. This means that the .code section (as well as any other section) of a 64-bit ELF binary for chaos must be within
+  this range. The ELF loader should (and will) check these ranges when creating the process, and return an error value if
+  the ELF specifies invalid section addresses.
+
+-- Per Lundberg <per@halleluja.nu>  Mon,  3 Nov 2008 20:58:39 +0200
