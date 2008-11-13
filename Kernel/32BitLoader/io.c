@@ -70,11 +70,11 @@ static void newline()
     }        
 }
 
-// Convert an uint32 to arbitrary base string format. The base can be anything between 2 (binary) and 36, since by then we
+// Convert an uint64 to arbitrary base string format. The base can be anything between 2 (binary) and 36, since by then we
 // have reached the end of the alphabet... (26 letters + 10 digits)
-static void number_to_string_uint32(uint32_t value, int base, char *output)
+static void number_to_string_uint64(uint64_t value, int base, char *output)
 {
-    char temporary_output[33];  // The maximum length the string can have (when the base is 2)
+    char temporary_output[65];  // The maximum length the string can have (when the base is 2)
     int c = 0;
 
     // Do some basic argument checking here.
@@ -130,6 +130,16 @@ static void number_to_string_uint32(uint32_t value, int base, char *output)
         //output[max_position - c] = 'x';
     }
     output[max_position + 1] = '\0';
+}
+
+// Convert an uint32 to "arbitrary base" string format.
+static void number_to_string_uint32(uint32_t value, int base, char *output)
+{
+    // Poor-man's function overloading... :-) Since a uint32 is totally "upward" compatible with a uint64 (but not the other
+    // way around), this is totally possible. The only risk of doing like this is that 'output' could overflow its boundaries
+    // if the value would somehow be larger than UINT32_MAX... but really, that isn't be possible, so it is totally safe to
+    // do like this.
+    number_to_string_uint64(value, base, output);
 }
 
 static void io_sleep()
@@ -260,7 +270,8 @@ void io_print_formatted(const char *format_string, ...)
             // only implement the stuff that we actually need.
             switch (format_string[c])
             {
-                // Base 16 (hexadecimal), 32-bit unsigned integer.
+                // We differ here a bit from the regular printf(). In printf(), %x means "hexadecimal with lowercase
+                // letters". Here, we treat %x as "hexadecimal 32-bit integer" and %X as "hexadecimal 64-bit integer".
                 case 'x':
                 {
                     char string[9];             // A 32-bit integer can be no longer than 8 hex characters + a NUL
@@ -270,6 +281,14 @@ void io_print_formatted(const char *format_string, ...)
                     break;
                 }
 
+                case 'X':
+                {
+                    char string[17];            // A 64-bit integer can be no longer than 16 hex characters + a NUL terminator.
+                    number_to_string_uint64(va_arg(arguments, uint64_t), 16, string);
+                    io_print(string);
+                    break;
+                }
+                
                 // Base 10 (decimal), 32-bit unsigned integer.
                 case 'u':
                 {
@@ -280,12 +299,33 @@ void io_print_formatted(const char *format_string, ...)
                     break;
                 }
 
+                // Base 10 (decimal), 64-bit unsigned integer.
+                case 'U':
+                {
+                    char string[21];            // A 64-bit integer can be no longer than 20 decimal characters + a NUL
+                                                // terminator.
+                    number_to_string_uint64(va_arg(arguments, uint64_t), 10, string);
+                    io_print(string);
+                    break;
+                    break;
+                }
+
                 // Base 2 (binary), 32-bit unsigned integer.
                 case 'b':
                 {
                     char string[11];            // A 32-bit integer can be no longer than 10 decimal characters + a NUL
                                                 // terminator.
-                    number_to_string_uint32(va_arg(arguments, uint64_t), 2, string);
+                    number_to_string_uint32(va_arg(arguments, uint32_t), 2, string);
+                    io_print(string);
+                    break;
+                }
+
+                // Base 2 (binary), 64-bit unsigned integer.
+                case 'B':
+                {
+                    char string[21];            // A 64-bit integer can be no longer than 20 decimal characters + a NUL
+                                                // terminator.
+                    number_to_string_uint64(va_arg(arguments, uint64_t), 2, string);
                     io_print(string);
                     break;
                 }
