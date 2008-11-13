@@ -9,8 +9,8 @@ TARGET_PATH = /var/lib/tftpboot
 CC = gcc-4.1
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main
-CFLAGS = $(AS_FLAGS) --std=gnu99
-LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000
+CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb
+LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000 
 
 # No user-serviceable parts below this line. :-)
 
@@ -21,7 +21,7 @@ KERNEL_OBJS = start.o io.o 64bit.o main.o
 all: $(KERNEL)
 
 $(KERNEL): $(KERNEL_OBJS)
-	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) -o $(KERNEL)
+	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) /usr/lib/gcc/x86_64-linux-gnu/4.1.2/32/libgcc.a -o $(KERNEL)
 
 clean:
 	rm -f $(KERNEL) $(KERNEL_OBJS)
