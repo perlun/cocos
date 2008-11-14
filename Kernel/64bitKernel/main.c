@@ -1,9 +1,8 @@
 /* 
  * $Id$
  *
- * main.c - the main() method of the kernel. As you would expect, this is where the execution of the cosmos kernel
- * begins. For political reasons (gcc complains at us), we can't just call this method main() though, since we use
- * different arguments than the traditional C main()...
+ * main.c - the main() method of the kernel. As you would expect, this is where the execution of the cosmOS kernel
+ * begins.
  *
  * Author: Per Lundberg <per@halleluja.nu>
  * Copyright: (C) 2008 Per Lundberg
@@ -12,27 +11,28 @@
 #include "cpu.h"
 #include "io.h"
 #include "multiboot.h"
+#include "vm.h"
 
-void main(multiboot_info_t *multiboot_header)
+void main(multiboot_info_t *multiboot_header, uint64_t upper_memory_limit)
 {
     io_init();
     io_leet_print("cocOS64 version 2008 loading...");
     io_print("\n");
 
-    // This doesn't work: the Multiboot header parameter is correct, but it is usually put at the very end of the RAM and the
-    // paging code in the 32-bit boot loader only maps the very first 2 megs of physical memory. So, we would have to set up
-    // proper paging of the full physical memory before we try to access any of the Multiboot structures.
+    // Alright. We are now in 64-bit mode. However, for the moment only the lowest 2 megs of RAM are properly 1-to-1 mapped
+    // (identity mapped), and can be accessed. This is set up in the 64-bit initialization code in the 32-bit
+    // loader. (64bit.S) Now, it is time to create real VM structure (PML4, Page Directory Pointers and Page Tables) for
+    // all the physical memory.
 
-    // The only problem is: we would really prefer to do it the "Windows NT" :-) way... to map the full physical memory from
-    // 2^48 (where 48 is the number if virtual address lines) and downwards. Of course, we can set up something temporary
-    // first and then change later, but it is better to do it right from the beginning...
+    // There is only one little problem: the physical memory size is located in the Multiboot structure, which can be placed
+    // anywere in RAM, and thus be inaccessible to us. We solve it by having it provided to us as a parameter to this
+    // function: upper_memory_limit. This parameter gives us the total amount of memory in the system. By using this
+    // parameter, we know how much physical memory to map in the lower VM zone (see the cocOS VM specification for more
+    // information about the VM zones). When this memory is mapped, we can then read the Multiboot memory map once again to
+    // know which pages to flag as usable and which ones that are reserved by hardware.
+    
+    vm_init (upper_memory_limit);
 
-    // I think we do it like this: we try to get the mapping of the physical memory "docked" to the top of the virtual
-    // address space first. It we can get it working (which we should), we can then access the Multiboot structures by adding
-    // PHYSICAL_MEMORY_BASE to the pointers. We'll have to do similar things everytime we want to access a physical memory
-    // address anyway.
-
-    //io_print_formatted("[64] mbi: %X\n", multiboot_header);
     //io_print((const char *) (uint64_t) multiboot_header->command_line);
     //    io_print("\n");
 

@@ -35,8 +35,8 @@ typedef struct
 
 typedef struct
 {
-  int x;
-  int y;
+    int x;
+    int y;
 } cursor_t;
 
 /* Variables. */
@@ -372,4 +372,28 @@ void io_print_formatted(const char *format_string, ...)
     }
 
     va_end(arguments);
+}
+
+/**
+ * Get the cursor position.
+ *
+ * @param row  The current row [out]
+ * @param column  The current column [out]
+ */
+void io_get_cursor(int *row, int *column)
+{
+    *row = cursor.y;
+    *column = cursor.x;
+}
+
+/**
+ * Move the cursor.
+ *
+ * @param row  The row to move the cursor to.
+ * @param column  The column to move the cursor to.
+ */
+void io_move_cursor(int row, int column)
+{
+    cursor.y = row;
+    cursor.x = column;
 }

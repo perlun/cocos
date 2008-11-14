@@ -9,14 +9,18 @@ TARGET_PATH = /var/lib/tftpboot
 CC = gcc-4.1
 INSTALL = install
 AS_FLAGS = -c -m64 -Wall -Werror -Wno-main
-CFLAGS = $(AS_FLAGS) --std=gnu99
-LDFLAGS = -m64 -nostdlib -Wl,--oformat -Wl,binary -Wl,-N -Wl,-Ttext -Wl,80000 -e main
+
+# The -DKERNEL_HACKER flag makes the kernel be compiled in a mode suitable for kernel hackers; information that can be
+# useless to other people will be printed out in this mode, for example.
+CFLAGS = $(AS_FLAGS) --std=gnu99 -DKERNEL_HACKER
+
+LDFLAGS = -m64 -nostdlib -Wl,--oformat -Wl,binary -Wl,-N -Wl,-Ttext -Wl,100000 -e main
 
 # No user-serviceable parts below this line. :-)
 
 LINK = $(CC)
 KERNEL = cocOS64.bin
-KERNEL_OBJS = main.o io.o
+KERNEL_OBJS = main.o io.o vm.o
 
 all: $(KERNEL)
 
