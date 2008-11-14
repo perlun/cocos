@@ -11,10 +11,10 @@
 
 /* This is to make sure that the assembly files can still include multiboot.h without getting compilation errors. */
 #ifndef __ASSEMBLER__
-extern void _64bit_init(void *multiboot_header);
+extern void _64bit_init(void *multiboot_header, uint64_t highest_address);
 #endif
 
 // The entry point of the 64-bit kernel.
-#define _64BIT_KERNEL_ENTRY_POINT        0x80000
+#define _64BIT_KERNEL_ENTRY_POINT        0x100000
 
 #endif /* ! __INT64_H__ */
