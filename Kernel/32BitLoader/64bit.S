@@ -49,7 +49,8 @@ has_long_mode:
         // base of the PML4 page table. The PML4 page table must be located below 4 GiB because only 32 bits of CR3
         // are loaded when the processor is in 32-bit mode.
 
-        // The page tables are placed at A000 (in other words, at 10 KiB) and they will look like this:
+        // The paging data structures are placed at A000 (in other words, at 40 KiB) and onwards. Please note that those
+        // sturctures will be wiped by the 64-bit kernel; they are ONLY used to be able to jump to the 64-bit kernel code.
 
         // Page Map Level 4:
         // dq 0x000000000000B00F		;00000000 00000000 00000000 00000000 00000000 00000000 10010000 00001111
@@ -150,11 +151,13 @@ _end_of_64print_loop:
         //
         // http://www.x86-64.org/documentation/abi-0.99.pdf
         //
-        // For now, we only need to know and accept that RDI is the first of those integer-parameter registers. :)
+        // For now, we only need to know and accept that RDI is the first and RSI is the second integer-parameter
+        // register. :)
         mov     edi, dword ptr [esp + 4]
-        and     edi, 0xFFFFFFFF                         // We just make 100% certain that the upper part of this register
+        and     rdi, 0xFFFFFFFF                         // We just make 100% certain that the upper part of this register
                                                         // doesn't contain any junk...
-                
+        mov     rsi, qword ptr [esp + 8]
+        
         mov     rax, _64BIT_KERNEL_ENTRY_POINT          // We can't just call this address directly, there doesn't seem
         call    rax                                     // to be such an instruction... so we go via a register.
                     

@@ -10,6 +10,7 @@
 
 #include "64bit.h"
 #include "io.h"
+#include "math.h"
 #include "multiboot.h"
 
 #define HALT()    while (1 == 1)
@@ -53,6 +54,48 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
         HALT();
     }
 
+    // Before we move on, we want to determine the highest memory address available in the machine. This is used by the
+    // kernel to know how much physical memory to map. We do this to make life a bit simpler for the 64-bit kernel, since it
+    // initially only has access to a limited part of the physical memory, before paging is properly set up.
+    uint64_t highest_address = 0;
+    if (multiboot_info->flags.has_memory_map)
+    {
+        unsigned int index = 0;
+        while (index < multiboot_info->memory_map_length)
+        {
+            // Pointer arithmetics is always a bit dangerous, but this one should be safe: memory_map_address is defined as
+            // an integer, so we won't get any weird unexpected semantics...
+            multiboot_memory_map_t *memory_map = (multiboot_memory_map_t *) (multiboot_info->memory_map_address + index);
+            if (memory_map->type == MULTIBOOT_MEMORY_MAP_TYPE_RAM)
+            {
+                uint64_t base_address = ((uint64_t) memory_map->base_address_high << 32) + memory_map->base_address_low;
+                uint64_t length = ((uint64_t) memory_map->length_high << 32) + memory_map->length_low;
+                highest_address = MAX(highest_address, base_address + length);
+
+                // This can be handy when debugging so I'll leave it in the code, commented out.
+                //io_print_formatted("Index: %u, Memory info: %X %X, type: %u\n", index, base_address, length, memory_map->type);
+            }
+
+            // The record size is the size of the record MINUS the record size field... which is a 32-bit integer. So, we
+            // need to add 4 here to get it right.
+            index += memory_map->size + 4;
+        }
+
+        io_print_formatted("%X\n", highest_address);
+    }
+    else if (multiboot_info->flags.has_memory_info)
+    {
+        // This is a bit poor; we might miss some memory but doing like this. The alternative would be to not do any
+        // autodetection at all in this case and just halt (and perhaps let the memory size be overridable by means of a
+        // kernel command line parameter).
+        highest_address = (multiboot_info->memory_upper * 1024) + (1024 * 1024);
+    }
+    else
+    {
+        io_print_line("cocOS requires a Multiboot kernel that provides memory information. Halting.");
+        HALT();
+    }
+
     // Alright, let's get moving. What we do now is set up basic data structures to be able to activate the ultra-cool amd64
     // "long mode". :-) But first, we will detect that the CPU is actually a 64-bit CPU.
 
@@ -60,5 +103,5 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
     // single assembly function, IMO.
 
     // Because of its nature, this function will never return. If 64-bit initialization fails, it will halt the CPU. 
-    _64bit_init(multiboot_info);
+    _64bit_init(multiboot_info, highest_address);
 }
