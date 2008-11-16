@@ -60,8 +60,9 @@ has_long_mode:
         // dq 0x000000000000C00F		;00000000 00000000 00000000 00000000 00000000 00000000 10100000 00001111
         // times 511 dq 0x0000000000000000
 
-        // Page Tables: :
+        // Page Directory: :
         // dq 0x000000000000018F		;00000000 00000000 00000000 00000000 00000000 00000000 00000001 10001111
+
         // times 511 dq 0x0000000000000000
 
         // This defines one 2MB identity-mapped page at the start of memory (so we can access the first 2 megs of
@@ -94,6 +95,7 @@ has_long_mode:
         mov     ecx, 0x03FF
         rep     stosd
                 
+        // Load the address of this newly set up paging structure into CR3.
         mov     eax, 0xA000
         mov     cr3, eax
        
