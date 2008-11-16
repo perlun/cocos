@@ -16,10 +16,12 @@ LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,80000
 
 LINK = $(CC)
 KERNEL = cocOS32.bin
-KERNEL_OBJS = start.o io.o 64bit.o main.o
+KERNEL_OBJS = start.o io.o 64bit.o main.o vm.o
 
 all: $(KERNEL)
 
+# FIXME: having a hardwired reference to a particular version of libgcc.a here is ugly... I couldn't get it to work with just
+# -lgcc though. Someone else should look into this at some time.
 $(KERNEL): $(KERNEL_OBJS)
 	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) /usr/lib/gcc/x86_64-linux-gnu/4.1.2/32/libgcc.a -o $(KERNEL)
 

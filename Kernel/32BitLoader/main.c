@@ -12,6 +12,7 @@
 #include "io.h"
 #include "math.h"
 #include "multiboot.h"
+#include "vm.h"
 
 #define HALT()    while (1 == 1)
 
@@ -54,10 +55,10 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
         HALT();
     }
 
-    // Before we move on, we want to determine the highest memory address available in the machine. This is used by the
+    // Before we move on, we want to determine the amount of memory available available in the machine. This is used by the
     // kernel to know how much physical memory to map. We do this to make life a bit simpler for the 64-bit kernel, since it
     // initially only has access to a limited part of the physical memory, before paging is properly set up.
-    uint64_t highest_address = 0;
+    uint64_t available_memory = 0;
     if (multiboot_info->flags.has_memory_map)
     {
         unsigned int index = 0;
@@ -70,7 +71,7 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
             {
                 uint64_t base_address = ((uint64_t) memory_map->base_address_high << 32) + memory_map->base_address_low;
                 uint64_t length = ((uint64_t) memory_map->length_high << 32) + memory_map->length_low;
-                highest_address = MAX(highest_address, base_address + length);
+                available_memory = MAX(available_memory, base_address + length);
 
                 // This can be handy when debugging so I'll leave it in the code, commented out.
                 //io_print_formatted("Index: %u, Memory info: %X %X, type: %u\n", index, base_address, length, memory_map->type);
@@ -81,14 +82,14 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
             index += memory_map->size + 4;
         }
 
-        io_print_formatted("%X\n", highest_address);
+        io_print_formatted("%X\n", available_memory);
     }
     else if (multiboot_info->flags.has_memory_info)
     {
         // This is a bit poor; we might miss some memory but doing like this. The alternative would be to not do any
         // autodetection at all in this case and just halt (and perhaps let the memory size be overridable by means of a
         // kernel command line parameter).
-        highest_address = (multiboot_info->memory_upper * 1024) + (1024 * 1024);
+        available_memory = (multiboot_info->memory_upper * 1024) + (1024 * 1024);
     }
     else
     {
@@ -100,8 +101,10 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
     // "long mode". :-) But first, we will detect that the CPU is actually a 64-bit CPU.
 
     // Initially, I had thought about doing it in a bunch of C functions but it's actually more elegant to do it all in one
-    // single assembly function, IMO.
+    // single assembly function, IMO. The only thing we do in C (because of convenience and code cleanness) is to set up the
+    // 4-level long mode paging structures.
+    vm_setup_paging_structures(available_memory);
 
     // Because of its nature, this function will never return. If 64-bit initialization fails, it will halt the CPU. 
-    _64bit_init(multiboot_info, highest_address);
+    _64bit_init(multiboot_info, available_memory);
 }
