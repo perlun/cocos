@@ -16,4 +16,6 @@
 #define MiB     (KiB * 1024)
 #define GiB     (MiB * 1024)
 
+#define HALT()    while (1 == 1)
+
 #endif // !__MISC_H__
