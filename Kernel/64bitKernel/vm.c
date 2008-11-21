@@ -10,7 +10,7 @@
 #include "io.h"
 #include "vm.h"
 
-static void vm_init_physical_zone(uint64_t upper_memory_limit)
+/*static*/ void vm_init_physical_zone(uint64_t upper_memory_limit)
 {
     // Physical memory VM zone initialization.
     //
@@ -51,7 +51,7 @@ static void vm_init_physical_zone(uint64_t upper_memory_limit)
 
 void vm_init(uint64_t upper_memory_limit)
 {
-    vm_init_physical_zone(upper_memory_limit);
+
 
     // Alright; new page tables have been set up. We can now set CR3 to point at the newly created PML4 structure.
 }

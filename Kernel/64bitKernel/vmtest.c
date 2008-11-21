@@ -25,9 +25,11 @@ static void vm_init_physical_zone(uint64_t upper_memory_limit)
     long num_pages = 0;
 
     // We need at least one of each one of those.
+    const long pml4_pages_needed = 1; // there is always just one PML4 structure.
     long pdp_pages_needed = 1;
     long pd_pages_needed = 1;
     long pt_pages_needed = 1;
+    int pd_index = 1; // The first PD entry is used for the "small pages" in the beginning of RAM (0-2 MiB).
     int pt_index = 0;
     for (long index = VM_SMALL_PAGE_SIZE; 
          index < upper_memory_limit + VM_SMALL_PAGE_SIZE;
@@ -46,6 +48,12 @@ static void vm_init_physical_zone(uint64_t upper_memory_limit)
 
         if (current_page_size == VM_LARGE_PAGE_SIZE)
         {
+            pd_index++;
+
+            if (pd_index == 512)
+            {
+                pd_pages_nee
+            }
         }
         else // current_page_size == VM_SMALL_PAGE_SIZE
         {
@@ -65,7 +73,8 @@ static void vm_init_physical_zone(uint64_t upper_memory_limit)
     num_pages++;
 
     printf("Total number of pages being mapped: %lu\n", num_pages);
-    printf("Number of paging-related 4 KiB pages needed: %lu\n", 1 + pdp_pages_needed + pd_pages_needed + pt_pages_needed);
+    printf("Number of paging-related 4 KiB pages needed: %lu\n", pml4_pages_needed + pdp_pages_needed + pd_pages_needed + 
+           pt_pages_needed);
 }
 
 int main(void)
