@@ -8,6 +8,7 @@
 
 #include "io.h"
 #include "misc.h"
+#include "common/vm.h"
 #include "vm.h"
 
 //// Paging structures.
