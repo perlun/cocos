@@ -1,7 +1,7 @@
 /* 
  * $Id$
  *
- * string.h - simple string functions. (really only output, no input is supported. :-)
+ * string.h - simple string functions.
  *
  * Author: Per Lundberg <per@halleluja.nu>
  * Copyright: (C) 2008 Per Lundberg

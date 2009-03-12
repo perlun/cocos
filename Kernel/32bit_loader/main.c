@@ -4,17 +4,17 @@
  * main.c - C entry point for the 32-bit kernel loader.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
+ * Copyright: (C) 2008 Per Lundberg
  */
 
 #include <stdint.h>
 
+#include "common/misc.h"
 #include "64bit.h"
 #include "io.h"
 #include "math.h"
 #include "multiboot.h"
 #include "vm.h"
-
-#define HALT()    while (1 == 1)
 
 /*
  * This is where execution starts when the entry point code in start.S has finished setting the most fundamental parts up. 
@@ -98,13 +98,16 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
     }
 
     // Alright, let's get moving. What we do now is set up basic data structures to be able to activate the ultra-cool amd64
-    // "long mode". :-) But first, we will detect that the CPU is actually a 64-bit CPU.
-
-    // Initially, I had thought about doing it in a bunch of C functions but it's actually more elegant to do it all in one
-    // single assembly function, IMO. The only thing we do in C (because of convenience and code cleanness) is to set up the
-    // 4-level long mode paging structures.
+    // "long mode". :-) But first, we will need to detect that the CPU is actually a 64-bit CPU, and similar.
+    //
+    // Initially, I had thought about doing this 64-bit initialization in a bunch of C functions but it's actually more
+    // elegant to do it all in one single assembly function, IMO (_64bit_init). The only thing we do in C (because of
+    // convenience and code cleanness) is to set up the 4-level long mode paging structures, which is done by the function
+    // below.
     vm_setup_paging_structures(available_memory);
 
+    // We now have VM set up, so let's call the aforementioned 64-bit initialization function.
+    //
     // Because of its nature, this function will never return. If 64-bit initialization fails, it will halt the CPU. 
     _64bit_init(multiboot_info, available_memory);
 }

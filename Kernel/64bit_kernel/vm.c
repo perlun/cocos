@@ -4,7 +4,7 @@
  * vm.c - Virtual Memory routines.
  *
  * Author: Per Lundberg <per@halleluja.nu>
- * Copyright: (C) 2008 Per Lundberg
+ * Copyright: (C) 2008-2009 Per Lundberg
  */
 
 #include "io.h"
@@ -14,10 +14,15 @@
 {
     // Physical memory VM zone initialization.
     //
-    // Because we want to trap NULL pointer references, we MUST make sure to not map page 0 (0-4 KiB). Now, just ignoring it
-    // means we waste 4 KiB of precious RAM and even though RAM is *extremely* cheap nowadays... 4 KiB is always KiB and it
-    // feels lame and wrong to just ignore it. What we do is that we map it "on top" of the rest of the physical memory, and
-    // set the upper memory boundary that can be used to upper_memory_limit + SMALL_PAGE_SIZE.
+    // Because we want to trap NULL pointer references, we MUST make sure to not map page 0 (0-4 KiB). I had initially
+    // thought about making this page mapped "above" all the rest of the RAM, but really, I think it will be hard to make
+    // that work in a good way... If you have 4 GiB of RAM in the machine, mapping one extra page from 4 GiB to 4 GiB + 4 KiB
+    // will require at least one extra page table (in this specific case, it will also require an extra page directory...).
+    //
+    // However, what we could do is to try and map this page in some of the "memory" holes in the low 2 meg area. Still, it
+    // will be a bit bad because we cannot do normal 1-to-1-translations of addresses in this area if we do it like that.  We
+    // try to find a suitable one-page memory need as we go along with the development instead, and use this memory for that
+    // if we find it.
 
     uint64_t current_page_size = VM_SMALL_PAGE_SIZE;
     int row = 0, column = 0;
@@ -51,7 +56,5 @@
 
 void vm_init(uint64_t upper_memory_limit)
 {
-
-
     // Alright; new page tables have been set up. We can now set CR3 to point at the newly created PML4 structure.
 }

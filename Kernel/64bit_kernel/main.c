@@ -27,7 +27,7 @@ void main(multiboot_info_t *multiboot_header, uint64_t upper_memory_limit)
     // There is only one little problem: the physical memory size is located in the Multiboot structure, which can be placed
     // anywere in RAM, and thus be inaccessible to us. We solve it by having it provided to us as a parameter to this
     // function: upper_memory_limit. This parameter gives us the total amount of memory in the system. By using this
-    // parameter, we know how much physical memory to map in the lower VM zone (see the cocOS VM specification for more
+    // parameter, we know how much physical memory to map in the lower VM zone (see the cocOS VM Specification for more
     // information about the VM zones). When this memory is mapped, we can then read the Multiboot memory map once again to
     // know which pages to flag as usable and which ones that are reserved by hardware.
     

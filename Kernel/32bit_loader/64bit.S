@@ -4,9 +4,11 @@
  * 64bit.S - code for entering 64-bit mode.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
+ * Copyright: (C) 2008-2009 Per Lundberg
  */
 
 #include "64bit.h"
+#include <common/vm.h>
         
         .text
         .code32
@@ -96,7 +98,8 @@ has_long_mode:
         rep     stosd
                 
         // Load the address of this newly set up paging structure into CR3.
-        mov     eax, 0xA000
+//      mov     eax, 0xA000
+        mov     eax, 0 //VM_STRUCTURES_PML4_ADDRESS
         mov     cr3, eax
        
         // Enable long mode (set EFER.LME = 1).

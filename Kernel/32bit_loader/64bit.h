@@ -4,12 +4,13 @@
  * 64bit.h - prototypes for 64bit.S, the 64-bit mode initialization code.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
+ * Copyright: (C) 2008-2009 Per Lundberg
  */
 
 #ifndef __64BIT_H__
 #define __64BIT_H__ 1
 
-/* This is to make sure that the assembly files can still include multiboot.h without getting compilation errors. */
+/* This is to make sure that the assembly files can still include 64bit.h without getting compilation errors. */
 #ifndef __ASSEMBLER__
 extern void _64bit_init(void *multiboot_header, uint64_t highest_address);
 #endif
