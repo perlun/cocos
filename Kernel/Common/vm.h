@@ -18,8 +18,10 @@
 ////
 //// Defines
 ////
-// The size of a "small" page. (0x1000 bytes)
-#define VM_SMALL_PAGE_SIZE              (4096)
+
+// The size of a "small" page, in bits and bytes. A small page is 4096 bytes big. (0x1000)
+#define VM_SMALL_PAGE_BITS              (12)
+#define VM_SMALL_PAGE_SIZE              (1 << VM_SMALL_PAGE_BITS)
 
 // The size of a "large" page.
 #define VM_LARGE_PAGE_SIZE              (2 * MiB)
@@ -66,11 +68,12 @@
 // The number of entries in the PML4, PDP, PD and PT tables, per page.
 #define VM_ENTRIES_PER_PAGE             (4096 / 8)      // That's 512, for those of us who can't count. :-)
 
-// The lowest bit of the PML4/PDP/PD/PT index in the virtual address.
-#define VM_PML4_INDEX_LOW_BIT           (39)
-#define VM_PDP_INDEX_LOW_BIT            (30)
-#define VM_PD_INDEX_LOW_BIT             (21)
-#define VM_PT_INDEX_LOW_BIT             (12)
+// The lowest bit of the PML4/PDP/PD/PT index in the virtual address, minus the size of a small page. This makes these
+// constants suitable for use when working with page numbers (rather than base addresses).
+#define VM_PML4_INDEX_LOW_BIT           (39 - VM_SMALL_PAGE_BITS)
+#define VM_PDP_INDEX_LOW_BIT            (30 - VM_SMALL_PAGE_BITS)
+#define VM_PD_INDEX_LOW_BIT             (21 - VM_SMALL_PAGE_BITS)
+#define VM_PT_INDEX_LOW_BIT             (12 - VM_SMALL_PAGE_BITS)
 
 // The binary mask for the indices (they are all 9 bits wide = 0-511).
 #define VM_INDEX_MASK                   (0x1FF)
@@ -84,160 +87,160 @@
 // A PML4 entry.
 typedef struct
 {
-    // No-execute means that addresses in this PML4E can not be executed.
-    uint64_t no_execute: 1;
-
-    // Available to the OS.
-    uint64_t available1: 11;
-
-    // The base-address of the PDP, left-shifted 12 bits.
-    uint64_t pdp_base_address: 40;
-
-    // Available to the OS:
-    uint64_t available2: 3;
-
-    // The following bits should be set to zero.
-    uint64_t reserved: 3;
-
-    // The accessed flag is set by the CPU when the page is being read from or written to. It can be used to implement
-    // swapping, a feature we hope we will never need. :-)
-    uint64_t accessed: 1;
+    // The "present" flag determines whether the PDP referenced to by this PML4 entry exists in the physical memory.
+    uint64_t present: 1;
     
-    // Page-Level Cache Disable. Set = disable caching for this page, clear = enable caching.
-    uint64_t pcd: 1;
-
-    // Page-Level Writethrough. Set = writethrough, clear = writeback caching.
-    uint64_t pwt: 1;
+    // If this flag is set, the pages can be written to. If clear, the pages are readonly.
+    uint64_t writable: 1;
 
     // If this flag is set, the page is accessible to user-level code.
     uint64_t user_level_accessible: 1;
 
-    // If this flag is set, the pages can be written to. If clear, the pages are readonly.
-    uint64_t writable: 1;
+    // Page-Level Writethrough. Set = writethrough, clear = writeback caching.
+    uint64_t pwt: 1;
+
+    // Page-Level Cache Disable. Set = disable caching for this page, clear = enable caching.
+    uint64_t pcd: 1;
     
-    // The "present" flag determines whether the PDP referenced to by this PML4 entry exists in the physical memory.
-    uint64_t present: 1;
+    // The accessed flag is set by the CPU when the page is being read from or written to. It can be used to implement
+    // swapping, a feature we hope we will never need. :-)
+    uint64_t accessed: 1;
+
+    // The following bits should be set to zero.
+    uint64_t reserved: 3;
+
+    // Available to the OS:
+    uint64_t available2: 3;
+
+    // The base-address of the PDP, left-shifted 12 bits.
+    uint64_t pdp_base_address: 40;
+
+    // Available to the OS.
+    uint64_t available1: 11;
+
+    // No-execute means that addresses in this PML4E can not be executed.
+    uint64_t no_execute: 1;
 } pml4e_t;
 
 // A PDP entry.
 typedef struct
 {
-    // No-execute means that addresses in these pages can not be executed.
-    uint64_t no_execute: 1;
-
-    // Available to the OS.
-    uint64_t available1: 11;
-
-    // The base-address of the PD, left-shifted 12 bits.
-    uint64_t pd_base_address: 40;
+    // The "present" flag determines whether the PD referenced to by this PDP entry exists in the physical memory.
+    uint64_t present: 1;
     
-    // Available to the OS.
-    uint64_t available2: 3;
+    // If this flag is set, the pages can be written to. If clear, the pages are readonly.
+    uint64_t writable: 1;
 
-    // The following bits should be set to zero.
-    uint64_t reserved: 3;
+    // If this flag is set, the pages are accessible to user-level code.
+    uint64_t user_level_accessible: 1;
+
+    // Page-Level Writethrough. Set = writethrough, clear = writeback caching.
+    uint64_t pwt: 1;
+
+    // Page-Level Cache Disable. Set = disable caching for this page, clear = enable caching.
+    uint64_t pcd: 1;
 
     // The accessed flag is set by the CPU when the page is being read from or written to. It can be used to implement
     // swapping, a feature we hope we will never need. :-)
     uint64_t accessed: 1;
 
-    // Page-Level Cache Disable. Set = disable caching for this page, clear = enable caching.
-    uint64_t pcd: 1;
+    // The following bits should be set to zero.
+    uint64_t reserved: 3;
 
-    // Page-Level Writethrough. Set = writethrough, clear = writeback caching.
-    uint64_t pwt: 1;
-
-    // If this flag is set, the pages are accessible to user-level code.
-    uint64_t user_level_accessible: 1;
-
-    // If this flag is set, the pages can be written to. If clear, the pages are readonly.
-    uint64_t writable: 1;
+    // Available to the OS.
+    uint64_t available2: 3;
     
-    // The "present" flag determines whether the PD referenced to by this PDP entry exists in the physical memory.
-    uint64_t present: 1;
+    // The base-address of the PD, left-shifted 12 bits.
+    uint64_t pd_base_address: 40;
+
+    // Available to the OS.
+    uint64_t available1: 11;
+
+    // No-execute means that addresses in these pages can not be executed.
+    uint64_t no_execute: 1;
 } pdpe_t;
 
 // A PD entry.
 typedef struct
 {
-    // No-execute means that addresses in these pages can not be executed.
-    uint64_t no_execute: 1;
-
-    // Available to the OS.
-    uint64_t available1: 11;
-
-    // The base-address of the PT, left-shifted 12 bits.
-    uint64_t pt_base_address: 40;
+    // The "present" flag determines whether the PD referenced to by this PDP entry exists in the physical memory.
+    uint64_t present: 1;
     
-    // Available to the OS.
-    uint64_t available2: 3;
+    // If this flag is set, the pages can be written to. If clear, the pages are readonly.
+    uint64_t writable: 1;
 
-    // The following bits should be set to zero.
-    uint64_t reserved: 3;
+    // If this flag is set, the pages are accessible to user-level code.
+    uint64_t user_level_accessible: 1;
+
+    // Page-Level Writethrough. Set = writethrough, clear = writeback caching.
+    uint64_t pwt: 1;
+
+    // Page-Level Cache Disable. Set = disable caching for this page, clear = enable caching.
+    uint64_t pcd: 1;
 
     // The accessed flag is set by the CPU when the page is being read from or written to. It can be used to implement
     // swapping, a feature we hope we will never need. :-)
     uint64_t accessed: 1;
 
-    // Page-Level Cache Disable. Set = disable caching for this page, clear = enable caching.
-    uint64_t pcd: 1;
+    // The following bits should be set to zero.
+    uint64_t reserved: 3;
 
-    // Page-Level Writethrough. Set = writethrough, clear = writeback caching.
-    uint64_t pwt: 1;
-
-    // If this flag is set, the pages are accessible to user-level code.
-    uint64_t user_level_accessible: 1;
-
-    // If this flag is set, the pages can be written to. If clear, the pages are readonly.
-    uint64_t writable: 1;
+    // Available to the OS.
+    uint64_t available2: 3;
     
-    // The "present" flag determines whether the PD referenced to by this PDP entry exists in the physical memory.
-    uint64_t present: 1;
+    // The base-address of the PT, left-shifted 12 bits.
+    uint64_t pt_base_address: 40;
+
+    // Available to the OS.
+    uint64_t available1: 11;
+
+    // No-execute means that addresses in these pages can not be executed.
+    uint64_t no_execute: 1;
 } pde_t;
 
 // A PT entry.
 typedef struct
 {
-    // No-execute means that addresses in this page can not be executed.
-    uint64_t no_execute: 1;
-
-    // Available to the OS.
-    uint64_t available1: 11;
-
-    // The base-address of the page, left-shifted 12 bits.
-    uint64_t page_base_address: 40;
+    // The "present" flag determines whether the page exists in the physical memory.
+    uint64_t present: 1;
     
-    // Available to the OS.
-    uint64_t available2: 3;
+    // If this flag is set, the page can be written to. If clear, the pages are readonly.
+    uint64_t writable: 1;
 
-    // Is this flag "global" (shared in all threads)?
-    uint64_t global: 1;
+    // If this flag is set, the page is accessible to user-level code.
+    uint64_t user_level_accessible: 1;
 
-    // The PAT has to do with caching. We don't use it for the moment.
-    uint64_t page_attribute_table;
+    // Page-Level Writethrough. Set = writethrough, clear = writeback caching.
+    uint64_t pwt: 1;
 
-    // The dirty flag is set by the CPU when the page has been written to. It is never cleared by the CPU, so if we want to
-    // use it, we might have to take care of that part ourselves.
-    uint64_t dirty;
+    // Page-Level Cache Disable. Set = disable caching for this page, clear = enable caching.
+    uint64_t pcd: 1;
 
     // The accessed flag is set by the CPU when the page is being read from or written to. It can be used to implement
     // swapping, a feature we hope we will never need. :-)
     uint64_t accessed: 1;
 
-    // Page-Level Cache Disable. Set = disable caching for this page, clear = enable caching.
-    uint64_t pcd: 1;
+    // The dirty flag is set by the CPU when the page has been written to. It is never cleared by the CPU, so if we want to
+    // use it, we might have to take care of that part ourselves.
+    uint64_t dirty: 1;
 
-    // Page-Level Writethrough. Set = writethrough, clear = writeback caching.
-    uint64_t pwt: 1;
+    // The PAT has to do with caching. We don't use it for the moment.
+    uint64_t page_attribute_table: 1;
 
-    // If this flag is set, the page is accessible to user-level code.
-    uint64_t user_level_accessible: 1;
+    // Is this flag "global" (shared in all threads)?
+    uint64_t global: 1;
 
-    // If this flag is set, the page can be written to. If clear, the pages are readonly.
-    uint64_t writable: 1;
+    // Available to the OS.
+    uint64_t available2: 3;
     
-    // The "present" flag determines whether the page exists in the physical memory.
-    uint64_t present: 1;
+    // The base-address of the page, left-shifted 12 bits.
+    uint64_t page_base_address: 40;
+
+    // Available to the OS.
+    uint64_t available1: 11;
+
+    // No-execute means that addresses in this page can not be executed.
+    uint64_t no_execute: 1;
 } pte_t;
 
 #endif // !__ASSEMBLER__
