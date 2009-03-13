@@ -16,7 +16,7 @@
 void main(multiboot_info_t *multiboot_header, uint64_t upper_memory_limit)
 {
     io_init();
-    io_leet_print("cocOS64 version 2008 loading...");
+    io_leet_print("cocOS64 version 2009 loading...");
     io_print("\n");
 
     // Alright. We are now in 64-bit mode. However, for the moment only the lowest 2 megs of RAM are properly 1-to-1 mapped
