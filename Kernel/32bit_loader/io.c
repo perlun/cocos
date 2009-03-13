@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "memory.h"
 #include "string.h"
 
 /* Constants */
@@ -18,7 +19,7 @@
 #define SCREEN_COLUMNS                  80
 
 /* The number of rows. */
-#define SCREEN_ROWS                     24
+#define SCREEN_ROWS                     25
 
 /* The video memory base address (for text-mode). */
 #define VIDEO_MEMORY_BASE               0xB8000
@@ -41,7 +42,7 @@ typedef struct
 
 /* Variables. */
 /* Pointer to the text video memory. */
-static volatile console_character_t *screen;
+static console_character_t *screen;
 
 /* The cursor. */
 static cursor_t cursor;
@@ -64,9 +65,14 @@ static void newline()
     cursor.y++;
     cursor.x = 0;
 
-    if (cursor.y > SCREEN_ROWS)
+    if (cursor.y == SCREEN_ROWS)
     {
-        // FIXME: implement scrolling please. :-)
+        // There are two bytes for each character on the screen, so we can perform the scrolling like this. We also reset
+        // the bottom line to make this work properly.
+        memory_copy(screen, &screen[SCREEN_COLUMNS], SCREEN_COLUMNS * SCREEN_ROWS * 2);
+        memory_zero(&screen[SCREEN_COLUMNS * (SCREEN_ROWS - 1)], SCREEN_COLUMNS * 2);
+
+        cursor.y = SCREEN_ROWS - 1;
     }        
 }
 
