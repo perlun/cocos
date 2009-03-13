@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-# This is the makefile for the 64-bit cosmos kernel.
+# This is the makefile for the 64-bit cocOS kernel.
 # Author: Per Lundberg <per@halleluja.nu>
 #
 
@@ -22,7 +22,10 @@ LINK = $(CC)
 KERNEL = cocOS64.bin
 KERNEL_OBJS = main.o io.o vm.o
 
-all: $(KERNEL)
+all: Makefile.dep $(KERNEL)
+
+Makefile.dep:
+	$(CC) $(CFLAGS) -M *.c > $(@)
 
 $(KERNEL): $(KERNEL_OBJS)
 	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) -o $(KERNEL)
@@ -38,3 +41,5 @@ clean:
 
 install: all
 	$(INSTALL) $(KERNEL) $(TARGET_PATH)
+
+include Makefile.dep

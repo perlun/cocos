@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-# This is the makefile for the 32-bit loader part of the cosmos kernel.
+# This is the makefile for the 32-bit loader part of the cocOS kernel.
 # Author: Per Lundberg <per@halleluja.nu>
 #
 
@@ -18,7 +18,10 @@ LINK = $(CC)
 KERNEL = cocOS32.bin
 KERNEL_OBJS = start.o io.o 64bit.o main.o vm.o
 
-all: $(KERNEL)
+all: Makefile.dep $(KERNEL)
+
+Makefile.dep:
+	$(CC) $(CFLAGS) -M *.c > $(@)
 
 # FIXME: having a hardwired reference to a particular version of libgcc.a here is ugly... I couldn't get it to work with just
 # -lgcc though. Someone else should look into this at some time.
@@ -36,3 +39,5 @@ clean:
 
 install: all
 	$(INSTALL) $(KERNEL) $(TARGET_PATH)
+
+include Makefile.dep
