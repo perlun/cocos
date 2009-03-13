@@ -25,7 +25,7 @@
 void main (uint32_t magic, multiboot_info_t *multiboot_info)
 {
     io_init();
-    io_print_line("cocOS32 version 2008 loading...");
+    io_print_line("cocOS32 version 2009 loading...");
 
     if (magic != 0x2BADB002)
     {
