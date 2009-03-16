@@ -8,6 +8,7 @@
  * Copyright: (C) 2008 Per Lundberg
  */
 
+#include "common/misc.h"
 #include "cpu.h"
 #include "io.h"
 #include "multiboot.h"
@@ -33,8 +34,10 @@ void main(multiboot_info_t *multiboot_header, uint64_t upper_memory_limit)
     
     vm_init (upper_memory_limit);
 
-    //io_print((const char *) (uint64_t) multiboot_header->command_line);
-    //    io_print("\n");
+    io_print_formatted("Multiboot command line: %U, %X\n", ((uint64_t)&multiboot_header->command_line) / MiB,
+                       ((uint64_t)&multiboot_header->command_line));
+    io_print((const char *) (uint64_t) multiboot_header->command_line);
+    io_print("\n");
 
     while (1 == 1);
 }

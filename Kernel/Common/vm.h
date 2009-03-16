@@ -16,15 +16,27 @@
 #endif
 
 ////
+//// Enumerations
+////
+typedef enum
+{
+    _4kib,
+    _2mib
+} page_size_e;
+
+////
 //// Defines
 ////
 
-// The size of a "small" page, in bits and bytes. A small page is 4096 bytes big. (0x1000)
-#define VM_SMALL_PAGE_BITS              (12)
-#define VM_SMALL_PAGE_SIZE              (1 << VM_SMALL_PAGE_BITS)
+// The size of a 4 KiB page, in bits and bytes. You might, rightfully, question why this is actually a define... but maybe it
+// feels better than to hardwire 4096 (or 0x1000) all over the code.  :-) Initially, the define was also called
+// VM_SMALL_PAGE_SIZE but I decided to skip it since that layer of abstraction proved to add very little real value (you're
+// just hiding the truth from the reader...)
+#define VM_4KIB_PAGE_BITS               (12)
+#define VM_4KIB_PAGE_SIZE               (1 << VM_4KIB_PAGE_BITS)
 
-// The size of a "large" page.
-#define VM_LARGE_PAGE_SIZE              (2 * MiB)
+// The size of a 2 MiB page.
+#define VM_2MIB_PAGE_SIZE               (2 * MiB)
 
 // For the full specification/definition of the amd64 paging architecture, please read AMD64 Architecture Programmers Manual,
 // Volume 2: System Programing.
@@ -52,11 +64,11 @@
 // will only always be exactly one page table here. So, in accordance with the KISS principle, we Keep It Simple by placing
 // as many structures as possible here on fixed locations.
 #define VM_STRUCTURES_LOW_PAGE_TABLE_ADDRESS \
-                                        (VM_STRUCTURES_PML4_ADDRESS + VM_SMALL_PAGE_SIZE)
+                                        (VM_STRUCTURES_PML4_ADDRESS + VM_4KIB_PAGE_SIZE)
 
 // After that comes the PDP (Page Directory Pointer) table. One PDP table can handle up to 2^39 bytes of RAM = 512 GiB. So,
 // when the physical memory in the machine goes above this number, there will be multiple PDPs.
-#define VM_STRUCTURES_PDP_ADDRESS       (VM_STRUCTURES_LOW_PAGE_TABLE_ADDRESS + VM_SMALL_PAGE_SIZE)
+#define VM_STRUCTURES_PDP_ADDRESS       (VM_STRUCTURES_LOW_PAGE_TABLE_ADDRESS + VM_4KIB_PAGE_SIZE)
 
 // Then, we have page directories. One page directory maps 1 gigabyte of RAM, in amd64 mode. So, there will be one of those
 // for each gigabyte of RAM in the machine. The location of this structure is variable; it will be placed immediately after
@@ -70,10 +82,10 @@
 
 // The lowest bit of the PML4/PDP/PD/PT index in the virtual address, minus the size of a small page. This makes these
 // constants suitable for use when working with page numbers (rather than base addresses).
-#define VM_PML4_INDEX_LOW_BIT           (39 - VM_SMALL_PAGE_BITS)
-#define VM_PDP_INDEX_LOW_BIT            (30 - VM_SMALL_PAGE_BITS)
-#define VM_PD_INDEX_LOW_BIT             (21 - VM_SMALL_PAGE_BITS)
-#define VM_PT_INDEX_LOW_BIT             (12 - VM_SMALL_PAGE_BITS)
+#define VM_PML4_INDEX_LOW_BIT           (39 - VM_4KIB_PAGE_BITS)
+#define VM_PDP_INDEX_LOW_BIT            (30 - VM_4KIB_PAGE_BITS)
+#define VM_PD_INDEX_LOW_BIT             (21 - VM_4KIB_PAGE_BITS)
+#define VM_PT_INDEX_LOW_BIT             (12 - VM_4KIB_PAGE_BITS)
 
 // The binary mask for the indices (they are all 9 bits wide = 0-511).
 #define VM_INDEX_MASK                   (0x1FF)
@@ -182,14 +194,26 @@ typedef struct
     // swapping, a feature we hope we will never need. :-)
     uint64_t accessed: 1;
 
-    // The following bits should be set to zero.
-    uint64_t reserved: 3;
-
+    // The following three fields are only used when this PDE references a 2 MiB page.
+    //
+    // The dirty flag is set by the CPU when the page has been written to. It is never cleared by the CPU, so if we want
+    // to use it, we might have to take care of that part ourselves.
+    uint64_t dirty: 1;
+    
+    // Page size. 0 means 4 KiB page, 1 means 2 KiB pages. If this flag is set to 1, the base_address below refers to the
+    // actual 21-bit (2 MiB) page.
+    uint64_t page_size: 1;
+    
+    // Is this page "global" (shared in all threads)?
+    uint64_t global: 1;
+    
+    // End of 2 MiB fields.
+    
     // Available to the OS.
     uint64_t available2: 3;
     
-    // The base-address of the PT, left-shifted 12 bits.
-    uint64_t pt_base_address: 40;
+    // The base-address of the PT (or page), left-shifted 12 bits.
+    uint64_t base_address: 40;
 
     // Available to the OS.
     uint64_t available1: 11;
@@ -227,7 +251,7 @@ typedef struct
     // The PAT has to do with caching. We don't use it for the moment.
     uint64_t page_attribute_table: 1;
 
-    // Is this flag "global" (shared in all threads)?
+    // Is this page "global" (shared in all threads)?
     uint64_t global: 1;
 
     // Available to the OS.

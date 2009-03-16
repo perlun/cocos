@@ -12,7 +12,7 @@ AS_FLAGS = -c -m64 -Wall -Werror -Wno-main
 
 # The -DKERNEL_HACKER flag makes the kernel be compiled in a mode suitable for kernel hackers; information that can be
 # useless to other people will be printed out in this mode, for example.
-CFLAGS = $(AS_FLAGS) --std=gnu99 -DKERNEL_HACKER
+CFLAGS = $(AS_FLAGS) --std=gnu99 -DKERNEL_HACKER -I..
 
 LDFLAGS = -m64 -nostdlib -Wl,--oformat -Wl,binary -Wl,-N -Wl,-Ttext -Wl,100000 -e main
 

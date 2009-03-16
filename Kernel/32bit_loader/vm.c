@@ -22,18 +22,28 @@
 // initilization takes place. It's not as if this 32-bit loader is designed to load anything else than *our* specific 64-bit
 // kernel anyway... (and even in that case, it wouldn't be a problem since the 64-bit kernel can just overwrite the 32-bit
 // stuff if it wants to)
+//
+// FIXME: I think we should actually move this to the 64-bit kernel ASAP, it makes more sense to have it there. We need to
+// put the PML4 and so forth in a typedef anyway (something like thread_vm_t), and that structure is irrelevant in the 32-bit
+// loader context. The problem though, is that we NEED to have 3 statically defined pages somewhere where we can place the
+// temporary PML4/PDP/PD stuff, to be able to do this. This is not as trivial as it seems: if we put it at 2 MiB (for
+// example),w e must know that GRUB/the multiboot boot loader hasn't put anything else important there...
+//
+// I'd need to read a bit about what memory assumptions we can make on the multiboot loader some day.
 
 // Define this to get some VM initialization debugging output. Good for checking out that the algorithms work properly.
 //#define VM_DEBUG 1
 
-// Paging structures.
+// Paging structures. These will need to be individualized for the threads later on (since each thread will need to have
+// parts of its own address space thread-local, we need to duplicate all of those actually).
 static pml4e_t *pml4 = (pml4e_t *)VM_STRUCTURES_PML4_ADDRESS;
 static pdpe_t *pdp = (pdpe_t *)VM_STRUCTURES_PDP_ADDRESS;
 static pde_t *pd;
 static pte_t *low_pt = (pte_t *)VM_STRUCTURES_LOW_PAGE_TABLE_ADDRESS;
 
 /**
- * Map a physical page into the virtual memory zone reserved for "physical" address space. (1-to-1 mapped)
+ * Map a physical page into the virtual memory zone reserved for "physical" address space. ("identity mapped" = 1-to-1, each
+ * physical address matches the same address in the virtual address space)
  *
  * Ideally, this function should be supplied the address to the PML4 etc by a parameter or similar. Right now, we make it
  * pretty hardwired. If we supply the PML4, we still have to tell the function where all the other tables should be placed so
@@ -43,13 +53,14 @@ static pte_t *low_pt = (pte_t *)VM_STRUCTURES_LOW_PAGE_TABLE_ADDRESS;
  * @param physical_page  The number of the page that should be mapped (in the physical address space)
  * @param page_size  The size of the page that should be mapped.
  */
-static void vm_map_physical_memory(uint64_t virtual_page, uint64_t physical_page, int page_size)
+static void vm_map_physical_memory(uint64_t virtual_page, uint64_t physical_page, page_size_e page_size)
 {
-    if (page_size != VM_SMALL_PAGE_SIZE &&
-        page_size != VM_LARGE_PAGE_SIZE)
+    // We want the page indices to be in terms of 4 KiB pages, since that's the way the PML4, PDP, PD and PT structures are
+    // built up. So, if we were called to perform a 2 MiB mapping request, let's convert the page indices a bit.
+    if (page_size == _2mib)
     {
-        io_print_formatted("Invalid page size encountered in vm_map_physical_memory: %x", page_size);
-        HALT();
+        virtual_page = virtual_page * (VM_2MIB_PAGE_SIZE / VM_4KIB_PAGE_SIZE);
+        physical_page = physical_page * (VM_2MIB_PAGE_SIZE / VM_4KIB_PAGE_SIZE);
     }
 
     // Calculate which indices we should look at when setting up the mapping for this virtual page.
@@ -67,7 +78,7 @@ static void vm_map_physical_memory(uint64_t virtual_page, uint64_t physical_page
         //
         // The PDP base address is the physical address with the lower 12 bits shifted off. In other words, it must be
         // page aligned and the "address" can really be seen as a physical 4 KiB page number.
-        pml4[pml4_index].pdp_base_address = ((uint32_t)pdp + pml4_index * VM_SMALL_PAGE_SIZE) / VM_SMALL_PAGE_SIZE;
+        pml4[pml4_index].pdp_base_address = ((uint32_t)pdp + pml4_index * VM_4KIB_PAGE_SIZE) / VM_4KIB_PAGE_SIZE;
 
         // We enable write/through caching for this PML4 entry, since that takes precedence over all pages below it.
         pml4[pml4_index].pwt = 1;
@@ -83,7 +94,7 @@ static void vm_map_physical_memory(uint64_t virtual_page, uint64_t physical_page
         // This PDP entry is not present. We need to set it up.
         //
         // The logic for this address is the same as for the other tables.
-        pdp[pdp_index].pd_base_address = ((uint32_t)pd + pdp_index * VM_SMALL_PAGE_SIZE) / VM_SMALL_PAGE_SIZE;
+        pdp[pdp_index].pd_base_address = ((uint32_t)pd + pdp_index * VM_4KIB_PAGE_SIZE) / VM_4KIB_PAGE_SIZE;
 
         // We enable write/through caching for this PML4 entry, since that takes precedence over all pages below it.
         pdp[pdp_index].pwt = 1;
@@ -91,43 +102,81 @@ static void vm_map_physical_memory(uint64_t virtual_page, uint64_t physical_page
         pdp[pdp_index].present = 1;
     }
 
-    if (pd_index > 1)
+    switch (page_size)
     {
-        io_print_formatted("Invalid mapping attempted! %X = %X. For small pages, we currently only have VM structures set up for the first two MiB of RAM.\n",
-                           virtual_page, physical_page);
-        HALT();
-    }
+        case _4kib:
+        {
+            // If we make stupid limitations, let's at least admit it openly.  :-)
+            if (pd_index > 1)
+            {
+                io_print_formatted("Invalid mapping attempted! %X = %X. For small pages, we currently only have VM structures set up for the first two MiB of RAM.\n",
+                                   virtual_page, physical_page);
+                HALT();
+            }
 
-    if (!pd[pd_index].present)
-    {
+            if (!pd[pd_index].present)
+            {
 #ifdef VM_DEBUG
-        io_print_formatted("Setting up PD entry %u\n", pd_index);
+                io_print_formatted("Setting up PD entry %u\n", pd_index);
 #endif
-        // Likewise for the page directory; if the entry is not present, set it up.
-
-        // The logic for this address is the same as for the other tables. Note that this code is not >125 GiB-compliant for
-        // the moment. We need to update it before the 125 GiB barrier is exceeded (see the MemoryMap for more
-        // information). It should be pretty simple to fix actually, but I'll not put any time into it right now.
-        pd[pd_index].pt_base_address = ((uint32_t)low_pt + pd_index * VM_SMALL_PAGE_SIZE) / VM_SMALL_PAGE_SIZE;
-
-        // We enable write/through caching for this PML4 entry, since that takes precedence over all pages below it.
-        pd[pd_index].pwt = 1;
-        pd[pd_index].writable = 1;
-        pd[pd_index].present = 1;
-    }
-
-    // ...and finally, the 4-level VM structures has come to its most fine-grained part: the page table. Here, we don't even
-    // check the "present" flag since we reset it anyway. Other than that, the code is basically the same as above,
-    // EXCEPT... one important exception: the page_base_address is obviously not set to Yet Another Paging Table<tm>, but
-    // rather to the actual page itself (phew!)
+                // Likewise for the page directory; if the entry is not present, set it up.
+                
+                // The logic for this address is the same as for the other tables. Note that this code is not >125
+                // GiB-compliant for the moment. We need to update it before the 125 GiB barrier is exceeded (see the
+                // MemoryMap for more information). It should be pretty simple to fix actually, but I'll not put any time
+                // into it right now.
+                pd[pd_index].base_address = ((uint32_t)low_pt + pd_index * VM_4KIB_PAGE_SIZE) / VM_4KIB_PAGE_SIZE;
+                
+                // We enable write/through caching for this PML4 entry, since that takes precedence over all pages below it.
+                pd[pd_index].pwt = 1;
+                pd[pd_index].writable = 1;
+                pd[pd_index].present = 1;
+            }
+            
+            // ...and finally, the 4-level VM structures has come to its most fine-grained part: the page table. Here, we
+            // don't even check the "present" flag since we reset it anyway. Other than that, the code is basically the same
+            // as above, EXCEPT... one important exception: the page_base_address is obviously not set to Yet Another Paging
+            // Table<tm>, but rather to the actual page itself (phew!)
 #ifdef VM_DEBUG
-    io_print_formatted("Setting up PT %u\n", pt_index);
+            io_print_formatted("Setting up PT %u\n", pt_index);
 #endif
+            
+            low_pt[pt_index].present = 1;
+            low_pt[pt_index].writable = 1;
+            low_pt[pt_index].pwt = 1;
+            low_pt[pt_index].global = 1;
+            low_pt[pt_index].page_base_address = physical_page;
 
-    low_pt[pt_index].page_base_address = physical_page;
-    low_pt[pt_index].pwt = 1;
-    low_pt[pt_index].writable = 1;
-    low_pt[pt_index].present = 1;
+
+            break;
+        }
+        
+        case _2mib:
+        {
+#ifdef VM_DEBUG
+            io_print_formatted("Setting up 2 MiB PD entry %u\n", pd_index);
+#endif
+            
+            // We enable write/through caching for this PML4 entry, since that takes precedence over all pages below it.
+            pd[pd_index].present = 1;
+            pd[pd_index].writable = 1;
+            pd[pd_index].pwt = 1;
+            pd[pd_index].global = 1;
+            pd[pd_index].page_size = 1;
+            
+            // The logic for this address is the same as for the other tables, except that this entry references the
+            // actual page, rather than yet another table.
+            pd[pd_index].base_address = physical_page;
+            
+            break;
+        }
+        
+        default:
+        {
+            io_print_formatted("Invalid page size %x\n", page_size);
+            HALT();
+        }
+    }
 }
 
 /**
@@ -135,6 +184,8 @@ static void vm_map_physical_memory(uint64_t virtual_page, uint64_t physical_page
  */
 void vm_print_memory_mapping()
 {
+    io_print_formatted("Memory map:\n\n");
+
     io_print_formatted("PML4: %X\n", pml4[0]);
     io_print_formatted("PDP: %X\n", pdp[0]);
     io_print_formatted("PD: %X\n", pd[0]);
@@ -146,12 +197,17 @@ void vm_print_memory_mapping()
         int pd_index = (virtual_page >> VM_PD_INDEX_LOW_BIT) & VM_INDEX_MASK;
         int pt_index = (virtual_page >> VM_PT_INDEX_LOW_BIT) & VM_INDEX_MASK;
 
-        pdpe_t *pdp = (pdpe_t *) (uint32_t) (pml4[pml4_index].pdp_base_address * VM_SMALL_PAGE_SIZE);
-        pde_t *pd = (pde_t *) (uint32_t) (pdp[pdp_index].pd_base_address * VM_SMALL_PAGE_SIZE);
-        pte_t *pt = (pte_t *) (uint32_t) (pd[pd_index].pt_base_address * VM_SMALL_PAGE_SIZE);
+        pdpe_t *pdp = (pdpe_t *) (uint32_t) (pml4[pml4_index].pdp_base_address * VM_4KIB_PAGE_SIZE);
+        pde_t *pd = (pde_t *) (uint32_t) (pdp[pdp_index].pd_base_address * VM_4KIB_PAGE_SIZE);
 
-        //        io_print_formatted("Virtual page %u is mapped to physical page %u.\n", virtual_page, pt[pt_index].page_base_address);
-        io_print_formatted("PT: %X\n", pt[pt_index]);
+        // Only go down to the fourth level in the VM hierarchy when it is relevant.
+        if (pd[pd_index].page_size == 0)
+        {
+            pte_t *pt = (pte_t *) (uint32_t) (pd[pd_index].base_address * VM_4KIB_PAGE_SIZE);
+            
+            //        io_print_formatted("Virtual page %u is mapped to physical page %u.\n", virtual_page, pt[pt_index].page_base_address);
+            io_print_formatted("PT: %X\n", pt[pt_index]);
+        }
     }
 }
 
@@ -177,22 +233,27 @@ void vm_setup_paging_structures(uint64_t available_memory)
         num_pds++;
     }
 
-    pd = (pde_t *)((void *)pdp + num_pdps * VM_SMALL_PAGE_SIZE);
+    pd = (pde_t *)((void *)pdp + num_pdps * VM_4KIB_PAGE_SIZE);
 #ifdef VM_DEBUG
-    /*    io_print_formatted("PML4: %x\n", pml4);
+    io_print_formatted("PML4: %x\n", pml4);
     io_print_formatted("PDP base: %x\n", pdp);
     io_print_formatted("PD base: %x\n", pd);
     io_print_formatted("Low PT base: %x\n", low_pt);
-    io_print_formatted("Sizeof pml4e_t: %u\n", sizeof(pml4e_t)); */
+    io_print_formatted("Sizeof pml4e_t: %u\n", sizeof(pml4e_t));
 #endif
 
     // Start off by zapping the pages used for the PML4, PDP, PD and low page tables, just so we make sure they have
     // reasonable content.
-    memory_zero(pml4, VM_SMALL_PAGE_SIZE);
-    memory_zero(pdp, VM_SMALL_PAGE_SIZE * num_pdps);
-    memory_zero(pd, VM_SMALL_PAGE_SIZE * num_pds);
-    memory_zero(low_pt, VM_SMALL_PAGE_SIZE);
+    memory_zero(pml4, VM_4KIB_PAGE_SIZE);
+    memory_zero(pdp, VM_4KIB_PAGE_SIZE * num_pdps);
+    memory_zero(pd, VM_4KIB_PAGE_SIZE * num_pds);
+    memory_zero(low_pt, VM_4KIB_PAGE_SIZE);
 
+    // Just some security precautions since the for loop below doesn't take any RAM size into consideration. We can at least
+    // be nice and crash in a sensible way, in the extremely bizarre situation that someone has constructed an x86-64 machine
+    // with less than 2 megs of RAM. ;-) For physical machines, this will really never happen, but for virtual machines it
+    // could very well be the case. Still, it is extremely unlikely, and e.g. VMWare Server only lets you configure 4 megs or
+    // more for a VM...
     if (available_memory < 2 * MiB)
     {
         io_print_formatted("Less than 2 MiB of RAM. This is not supported by cocOS. Halting.");
@@ -204,20 +265,19 @@ void vm_setup_paging_structures(uint64_t available_memory)
     // large). Instead, we need to map those two megs of RAM using small (4 KiB) pages.
     for (uint64_t page_number = 1; page_number < VM_ENTRIES_PER_PAGE; page_number++)
     {
-        vm_map_physical_memory(page_number, page_number, VM_SMALL_PAGE_SIZE);
-    }
-
-    // Now, map the rest of the memory using 2 MiB pages. If we end up having a fragment of memory available "on top"
-    // (e.g. the memory is not evenly divisible with 2 MiB), we could map that up using 4KiB pages. Right now, we just round
-    // the memory size down to its closest 2 MiB figure.
-    if (available_memory % (2 * MiB) != 0)
-    {
-        // Since we're doing an integer divison here, we get the rounding down "for free". :-)
-        available_memory = (available_memory / (2 * MiB)) * 2 * MiB;
+        vm_map_physical_memory(page_number, page_number, _4kib);
     }
 
 #ifdef VM_DEBUG
     vm_print_memory_mapping();
 #endif
-    // FIXME: to be implemented...
+
+    // Now, map the rest of the memory using 2 MiB pages. If we end up having a fragment of memory available "on top"
+    // (e.g. the memory is not evenly divisible with 2 MiB), we could map that up using 4KiB pages. Right now, we just round
+    // the memory size down to its closest 2 MiB figure. This is done automatically when we perform an integer division.
+    int available_2mib_pages = available_memory / (2 * MiB);
+    for (uint64_t page_number = 1; page_number < available_2mib_pages; page_number++)
+    {
+        vm_map_physical_memory(page_number, page_number, _2mib);
+    }
 }
