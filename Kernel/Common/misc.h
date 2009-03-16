@@ -4,6 +4,7 @@
  * misc.h - Miscellaneous defines.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
+ * Copyright: (C) 2008 Per Lundberg
  */
 
 #ifndef __MISC_H__
