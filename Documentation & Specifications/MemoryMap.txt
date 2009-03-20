@@ -78,11 +78,6 @@ Low-level Mappings
   If we would *not* do it like this, kernel NULL pointers could never be trapped, which could lead to pretty hard-to-catch
   bugs within the kernel.
 
-UNSURE ABOUT WHETHER THIS WILL WORK. For large pages, we need to use a PML4/PDP/PD layout. For "regular" 4 KiB pages, we
-instead use a PML4/PDP/PD/PT layout. The question is as to whether those can be combined. I do think so, since the "large"
-page flag is bit 7 in the PD entry. So, if this bit is clear, the PD refers to a PT base address (bit 12-51). If this bit is
-set, the PD refers to the *actual page* (bit 21-51).
-
 * The first 2 MiB is mapped like this:
   - Page Map Level 4 index 0 (first page directory)
     # Page Directory index 0 (first page table):
