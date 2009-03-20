@@ -95,7 +95,7 @@ Low-level Mappings
          zero and the present flag being cleared. The AVL bits will also be set to 111, to indicate that this memory is
          not available in the machine.
   - Page Map Level 4 index 0(second page directory)
-    # One page director can hold information 
+    # One page director can hold information... FIXME: this sentence is unfinished. :-) 
 
 Physical Memory Structure
 -------------------------
