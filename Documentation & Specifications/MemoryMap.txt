@@ -1,7 +1,7 @@
 MemoryMap.txt ($Id$)
 =============
 
-This is the memory map/general VM theory for the cocOS architecture.
+This is the memory map/general VM theory for the cocOS architecture, sometimes referred to as "The cocOS VM Specification".
 
 General Concept and IA32 Background
 -----------------------------------
@@ -64,8 +64,83 @@ High-level Mappings
   accessed in a really intuitive and simple way must be the best thinkable way to do it, in my imagination.
 
 * Process VM ("upper half", the very last 128 TiB of the 64-bit virtual address space). This memory is reserved for use by
-  processes. This means that the .code section (as well as any other section) of a 64-bit ELF binary for chaos must be within
+  processes. This means that the .code section (as well as any other section) of a 64-bit ELF binary for cocOS must be within
   this range. The ELF loader should (and will) check these ranges when creating the process, and return an error value if
   the ELF specifies invalid section addresses.
+
+Low-level Mappings
+------------------
+
+* The physical VM is mapped 1-to-1, using 2 MiB (also known as "large" or "huge") pages. The only exception to this is the
+  very first 2 MiB of RAM. Because of the possibility of NULL pointers that can occur in the C and C++ programming
+  languages, among others, we need to make memory address 0x0 be something "unmapped", not referring to anything. If we do
+  so, we will get a "page fault" exception -- which the kernel then can trap and handle in a correct and deterministic way.
+  If we would *not* do it like this, kernel NULL pointers could never be trapped, which could lead to pretty hard-to-catch
+  bugs within the kernel.
+
+UNSURE ABOUT WHETHER THIS WILL WORK. For large pages, we need to use a PML4/PDP/PD layout. For "regular" 4 KiB pages, we
+instead use a PML4/PDP/PD/PT layout. The question is as to whether those can be combined. I do think so, since the "large"
+page flag is bit 7 in the PD entry. So, if this bit is clear, the PD refers to a PT base address (bit 12-51). If this bit is
+set, the PD refers to the *actual page* (bit 21-51).
+
+* The first 2 MiB is mapped like this:
+  - Page Map Level 4 index 0 (first page directory)
+    # Page Directory index 0 (first page table):
+      1) Page 0 (0-4 KiB): Not mapped. We achieve this by setting the P (Present) flag to zero. This means an exception will
+         occur on every attempt to read or write from this memory.
+      2) Page 1-511 (4 KiB-2 MiB): Mapped using 4 KiB pages.
+    # Page Directory index 1 (second page table):
+      1) Page 0 (2-4 MiB): Identity-mapped. In other words, matches physical memory address 2-4 MiB.
+      2) Page 1 (4-6 MiB): Identity-mapped.
+        ...
+      3) Page 511 (1024-1026 MiB). Identity-mapped.
+    # Page Directory index 2 (third page table)
+      1) Similar pattern as for Page Directory index 2. At startup, we detect the amount of physical memory available and only
+         map up to the amount of memory available. The rest of the PDPE:s in that page directory will have a base address of
+         zero and the present flag being cleared. The AVL bits will also be set to 111, to indicate that this memory is
+         not available in the machine.
+  - Page Map Level 4 index 0(second page directory)
+    # One page director can hold information 
+
+Physical Memory Structure
+-------------------------
+Please note that these areas are "zones" rather than actual usage. If only 16 KiB of paging structures are needed, only
+16 KiB will be allocated. But because of the inheritant complexity of a kernel physical/virtual memory subsystem, having
+these a bit fixed simplifies things a lot; it makes it possible to do some assumptions.
+
+- 0-512 KiB: reserved for paging structures.
+- 1-2 MiB: reserved for kernel memory.
+- 2 MiB-as much as is needed: reserved for paging structures.
+
+The "paging structures" here are only referring to the paging structures used for holding information about physical memory
+mappings (1-1 identity mapped pages). Regular user process mappings don't need to be kept as fixed locations like those;
+memory for those pages can be allocated by the kernel through the process page allocator, or similar.
+
+Paging Structures Memory Requirements
+-------------------------------------
+When speaking below about the memory requirements for the paging structures, we are only taking about the structures used for
+mapping physical memory. Process-based virtual memory allocation will require additional structures.
+
+- PML4: always present (1 page). Covers virtual memory up to 2^48 bytes.
+- PDP: covers virtual memory up to 2^39 bytes (1 page per 2^39 block), or 512 gigs of RAM.
+- PD: one table per gigabyte of RAM (2^30 bytes).
+- PT: not used with 2 MiB pages. When using 4 KiB pages, one per 2 MiB. Since we map memory 0-2 MiB using 4 KiB pages, we 
+  need one of those. (One page table
+
+So, some practical examples:
+- 1 GiB of RAM: 1 + 1 + 1 + 1 = 4 pages à 4 KiB each = 4 * 4 = 16 KiB.
+- 8 GiB of RAM: 1 + 1 + 8 + 1 = 11 pages à 4 KiB each = 44 KiB.
+...
+- 125 GiB of RAM: 1 + 1 + 125 + 1 = 128 pages à 4 KiB each = 512 KiB. With the current placement of the paging structures,
+  this is beginning to approach the limit. The VMWare in which I am running my development has a memory hole starting at
+  around 580 KiB, or something like that.  For the current time being, this memory limit seems pretty OK to me... We could
+  always locate extra page directories in another place; the only problem with it is that it needs to be a pretty "fixed"
+  spot because of the always recurring "chicken-and-egg" problem with kernel memory allocation (the VM system needs memory
+  allocation which needs VM...). As listed about, my idea is that after 512 KiB, we place potential extra page tables from 2
+  MiB and upwards.  What this means in reality is that kernel code + static data cannot exceed 1 megabyte in size. This
+  shouldn't really be a problem, ever; if it does, we have lost the initial scope quite a bit IMO.
+
+  For the time being though, we only implement support for up to 125 GiB of RAM, which should be enough for everybody^Wa
+  while...
 
 -- Per Lundberg <per@halleluja.nu>  Mon,  3 Nov 2008 20:58:39 +0200
