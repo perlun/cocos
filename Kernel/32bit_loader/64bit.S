@@ -14,7 +14,7 @@
         .code32
         
         // This makes GNU assembler behave a bit more like MASM, TASM and NASM -- in other words, conventional x86
-	// assemblers.
+        // assemblers.
         .intel_syntax noprefix
         
         .globl _64bit_init
@@ -55,15 +55,15 @@ has_long_mode:
         // sturctures will be wiped by the 64-bit kernel; they are ONLY used to be able to jump to the 64-bit kernel code.
 
         // Page Map Level 4:
-        // dq 0x000000000000B00F		;00000000 00000000 00000000 00000000 00000000 00000000 10010000 00001111
+        // dq 0x000000000000B00F                ;00000000 00000000 00000000 00000000 00000000 00000000 10010000 00001111
         // times 511 dq 0x0000000000000000
 
         // Page Directory Pointer:
-        // dq 0x000000000000C00F		;00000000 00000000 00000000 00000000 00000000 00000000 10100000 00001111
+        // dq 0x000000000000C00F                ;00000000 00000000 00000000 00000000 00000000 00000000 10100000 00001111
         // times 511 dq 0x0000000000000000
 
         // Page Directory: :
-        // dq 0x000000000000018F		;00000000 00000000 00000000 00000000 00000000 00000000 00000001 10001111
+        // dq 0x000000000000018F                ;00000000 00000000 00000000 00000000 00000000 00000000 00000001 10001111
 
         // times 511 dq 0x0000000000000000
 
@@ -181,7 +181,7 @@ gdt_pointer:
         //.long   0x1000               // This one doesn't work, as mentioned earlier.
         
         // FIXME: having these hardwired like this makes it extremely ugly and hard to see what this says... Perhaps we
-	// should even create the GDT from a C function to make it more obvious what they look like.
+        // should even create the GDT from a C function to make it more obvious what they look like.
 gdt:    .quad   0x0000000000000000      // Null descriptor.
         .quad   0x0020980000000000      // Code descriptor..
         .quad   0x0000900000000000      // Data descriptor..
