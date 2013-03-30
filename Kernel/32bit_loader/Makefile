@@ -1,12 +1,11 @@
 #
-# $Id$
-#
 # This is the makefile for the 32-bit loader part of the cocOS kernel.
+#
 # Author: Per Lundberg <per@halleluja.nu>
+# Copyright: © 2008-2009, 2013 Per Lundberg
 #
 
 TARGET_PATH = /var/lib/tftpboot
-CC = gcc
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
 CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I..
@@ -23,10 +22,8 @@ all: Makefile.dep $(KERNEL)
 Makefile.dep:
 	$(CC) $(CFLAGS) -M *.c > $(@)
 
-# FIXME: having a hardwired reference to a particular version of libgcc.a here is ugly... I couldn't get it to work with just
-# -lgcc though. Someone else should look into this at some time.
 $(KERNEL): $(KERNEL_OBJS)
-	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) /usr/lib/gcc/x86_64-linux-gnu/4.1.2/32/libgcc.a -o $(KERNEL)
+	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) -lgcc -o $(KERNEL)
 
 clean:
 	rm -f $(KERNEL) $(KERNEL_OBJS)
