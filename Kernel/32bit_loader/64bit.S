@@ -146,7 +146,7 @@ _64print_loop:
         stosb
         jmp     _64print_loop
 
-_end_of_64print_loop:   
+_end_of_64print_loop:
         
         // Now, call the 64-bit kernel. When this method (_64bit_init) was called, we received an argument that
         // is a pointed to the Multiboot header. We want to pass this header on to the 64-bit kernel. Now, for those of you
