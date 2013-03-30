@@ -1,10 +1,8 @@
 /* 
- * $Id: io.c 56 2008-10-31 23:21:02Z per $
- *
  * io.c - basic I/O support. (really only output, no input is supported. :-)
  *
  * Author: Per Lundberg <per@halleluja.nu>
- * Copyright: (C) 2008 Per Lundberg
+ * Copyright: © 2008, 2013 Per Lundberg
  */
 
 #include <stdarg.h>

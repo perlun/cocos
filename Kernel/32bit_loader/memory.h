@@ -1,11 +1,9 @@
 /* 
- * $Id$
- *
  * memory.h - simple functions for operating on memory ranges. In the future, those will be optimized using inline
  * assembly. For now, doing such optimizations is not something we prioritize.
  *
  * Author: Per Lundberg <per@halleluja.nu>
- * Copyright: (C) 2008 Per Lundberg
+ * Copyright: © 2008, 2013 Per Lundberg
  */
 
 #ifndef __MEMORY_H__
