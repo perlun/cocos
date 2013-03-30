@@ -1,10 +1,8 @@
 /*
- * $Id$
- *
  * vm.h - Common Virtual Memory definitions and structures.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
- * Copyright: (C) 2008-2009 Per Lundberg
+ * Copyright: © 2008-2009, 2013 Per Lundberg
  */
 
 #ifndef __COMMON_VM_H__
@@ -14,15 +12,6 @@
 #include <stdint.h>
 #include "common/misc.h"
 #endif
-
-////
-//// Enumerations
-////
-typedef enum
-{
-    _4kib,
-    _2mib
-} page_size_e;
 
 ////
 //// Defines
@@ -90,8 +79,17 @@ typedef enum
 // The binary mask for the indices (they are all 9 bits wide = 0-511).
 #define VM_INDEX_MASK                   (0x1FF)
 
-// The rest of the code is not interesting for assembly code.
+// The rest of the code is not interesting for assembly code. (and perhaps even more importantly, the GNU assembler barfs at it.)
 #ifndef __ASSEMBLER__
+
+////
+//// Enumerations
+////
+typedef enum
+{
+    _4kib,
+    _2mib
+} page_size_e;
 
 ////
 //// Type definitions and structures
