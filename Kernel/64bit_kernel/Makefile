@@ -6,7 +6,6 @@
 #
 
 TARGET_PATH = /var/lib/tftpboot
-CC = gcc
 INSTALL = install
 AS_FLAGS = -c -m64 -Wall -Werror -Wno-main
 
