@@ -21,6 +21,6 @@ clean:
 	make -C 64bit_kernel clean
 
 install:
-	TARGET_PATH=$(TARGET_PATH) make -C 32bit_loader install
-	TARGET_PATH=$(TARGET_PATH) make -C 64bit_kernel install
+	CC=$(CC) TARGET_PATH=$(TARGET_PATH) make -C 32bit_loader install
+	CC=$(CC) TARGET_PATH=$(TARGET_PATH) make -C 64bit_kernel install
 
