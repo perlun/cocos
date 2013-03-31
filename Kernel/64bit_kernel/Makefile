@@ -5,7 +5,6 @@
 # Copyright: © 2008-2009, 2013 Per Lundberg
 #
 
-TARGET_PATH = /var/lib/tftpboot
 INSTALL = install
 AS_FLAGS = -c -m64 -Wall -Werror -Wno-main
 

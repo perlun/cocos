@@ -6,7 +6,6 @@
 #
 
 CHANGESET = $(shell hg id -q)
-TARGET_PATH = /var/lib/tftpboot
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
 CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I.. -DCHANGESET=\"$(CHANGESET)\"
