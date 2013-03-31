@@ -152,15 +152,13 @@ _end_of_64print_loop:
         // is a pointed to the Multiboot header. We want to pass this header on to the 64-bit kernel. Now, for those of you
         // who are a bit used to 32-bit assembly/low-level programming, here comes something new (at least it was for me):
         // On amd64, you don't push integers on the stack. Instead, you pass it using a register. There is a list of the order
-        // of those registers specified in the System V ABI for AMD64, located at this URL:     
+        // of those registers specified in the System V ABI for AMD64, located at this URL:
         //
         // http://www.x86-64.org/documentation/abi-0.99.pdf
         //
         // For now, we only need to know and accept that RDI is the first and RSI is the second integer-parameter
         // register. :)
-        mov     edi, dword ptr [esp + 4]
-        and     rdi, 0xFFFFFFFF                         // We just make 100% certain that the upper part of this register
-                                                        // doesn't contain any junk...
+        mov     edi, dword ptr [esp + 4]                // Upper 32-bits are automatically cleansed by this op.
         mov     rsi, qword ptr [esp + 8]
         
         mov     rax, _64BIT_KERNEL_ENTRY_POINT          // We can't just call this address directly, there doesn't seem
