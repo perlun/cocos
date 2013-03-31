@@ -9,7 +9,7 @@ CHANGESET = $(shell hg id -q)
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
 CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I.. -DCHANGESET=\"$(CHANGESET)\"
-LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,80000
+LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000
 
 # No user-serviceable parts below this line. :-)
 
