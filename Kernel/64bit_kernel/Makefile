@@ -1,8 +1,8 @@
 #
-# $Id$
-#
 # This is the makefile for the 64-bit cocOS kernel.
+#
 # Author: Per Lundberg <per@halleluja.nu>
+# Copyright: © 2008-2009, 2013 Per Lundberg
 #
 
 TARGET_PATH = /var/lib/tftpboot

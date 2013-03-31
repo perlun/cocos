@@ -1,8 +1,9 @@
 #
-# $Id$
-#
 # Top-level makefile in the kernel.
+#
 # Author: Per Lundberg <per@halleluja.nu>
+# Copyright: © 2008-2009, 2013 Per Lundberg
+#
 
 UNAME := $(shell uname)
 
