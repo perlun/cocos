@@ -6,7 +6,6 @@ Welcome to cocOS. This is not intended to be a "real" operating system, which it
 
 The code has most recently been brought up to date with gcc:s current demands on Mac OS X. Can probably be made to compile quite easily from Linux also; feel free to send me a pull request if you've done that.
 
-ELF/Linux cross-compiler for OSX:
-http://crossgcc.rts-software.org/doku.php?id=compiling_for_linux
+To compile the code on OSX, you need the "standard" Xcode + CLI tools, and the following apps:
 
-(the 64-bit one is the one I use)
+* [ELF/Linux cross-compiler for OSX](http://crossgcc.rts-software.org/doku.php?id=compiling_for_linux). The 64-bit package is the one that you will need; it can compile our 32-bit parts also.
