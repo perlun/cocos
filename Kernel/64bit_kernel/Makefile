@@ -12,7 +12,7 @@ AS_FLAGS = -c -m64 -Wall -Werror -Wno-main
 # useless to other people will be printed out in this mode, for example.
 CFLAGS = $(AS_FLAGS) --std=gnu99 -DKERNEL_HACKER -I..
 
-LDFLAGS = -m64 -nostdlib -Wl,--oformat -Wl,binary -Wl,-N -Wl,-Ttext -Wl,100000 -e main
+LDFLAGS = -m64 -nostdlib -Wl,--oformat -Wl,binary -Wl,-N -Wl,-Ttext -Wl,200000 -e main
 
 # No user-serviceable parts below this line. :-)
 

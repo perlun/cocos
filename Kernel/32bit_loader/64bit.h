@@ -16,6 +16,6 @@ extern void _64bit_init(void *multiboot_header, uint64_t highest_address);
 #endif
 
 // The entry point of the 64-bit kernel.
-#define _64BIT_KERNEL_ENTRY_POINT        0x100000
+#define _64BIT_KERNEL_ENTRY_POINT        0x200000
 
 #endif // ! __64bIT_H__
