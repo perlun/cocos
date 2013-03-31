@@ -1,10 +1,8 @@
 /*
- * $Id$
- *
  * main.c - C entry point for the 32-bit kernel loader.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
- * Copyright: (C) 2008 Per Lundberg
+ * Copyright: © 2008, 2013 Per Lundberg
  */
 
 #include <stdint.h>
@@ -25,7 +23,8 @@
 void main (uint32_t magic, multiboot_info_t *multiboot_info)
 {
     io_init();
-    io_print_line("cocOS32 version 2009 loading...");
+    io_print_line("cocOS32 version 2013 loading...");
+    io_print_line("Compiled from changset " CHANGESET);
 
     if (magic != 0x2BADB002)
     {

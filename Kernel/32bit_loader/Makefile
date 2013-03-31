@@ -5,10 +5,11 @@
 # Copyright: © 2008-2009, 2013 Per Lundberg
 #
 
+CHANGESET = $(shell hg id -q)
 TARGET_PATH = /var/lib/tftpboot
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
-CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I..
+CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I.. -DCHANGESET=\"$(CHANGESET)\"
 LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,80000 
 
 # No user-serviceable parts below this line. :-)
@@ -23,7 +24,7 @@ Makefile.dep:
 	$(CC) $(CFLAGS) -M *.c > $(@)
 
 $(KERNEL): $(KERNEL_OBJS)
-	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) -lgcc -o $(KERNEL)
+	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) -o $(KERNEL)
 
 clean:
 	rm -f $(KERNEL) $(KERNEL_OBJS)
