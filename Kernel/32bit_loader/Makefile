@@ -10,13 +10,13 @@ TARGET_PATH = /var/lib/tftpboot
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
 CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I.. -DCHANGESET=\"$(CHANGESET)\"
-LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,80000 
+LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,80000
 
 # No user-serviceable parts below this line. :-)
 
 LINK = $(CC)
 KERNEL = cocOS32.bin
-KERNEL_OBJS = start.o io.o 64bit.o main.o vm.o
+KERNEL_OBJS = start.o io.o 64bit.o main.o vm.o compiler_rt/udivdi3.o compiler_rt/umoddi3.o
 
 all: Makefile.dep $(KERNEL)
 
