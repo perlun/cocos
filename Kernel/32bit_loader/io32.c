@@ -52,7 +52,15 @@ static uint8_t current_attribute = KERNEL_DEFAULT_ATTRIBUTE;
 void io_init()
 {
     screen = (console_character_t *) VIDEO_MEMORY_BASE;
-    memory_zero(screen, SCREEN_ROWS * SCREEN_COLUMNS);
+
+    // We cannot just wipe the screen using memory_zero(), since that will make the cursor be invisible if we move it to a place
+    // where there is no text.
+    for (int row = 0; row < 25; row++)
+        for (int column = 0; column < 80; column++)
+        {
+            screen[row * 80 + column].character = ' ';
+            screen[row * 80 + column].attribute = KERNEL_DEFAULT_ATTRIBUTE;
+        }
 
     cursor.x = 0;
     cursor.y = 0;

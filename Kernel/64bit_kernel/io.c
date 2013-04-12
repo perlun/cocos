@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "port.h"
 #include "string.h"
 
 /* Constants */
@@ -49,6 +50,8 @@ static cursor_t cursor;
 /* The current attribute to write text with. */
 static uint8_t current_attribute = KERNEL_DEFAULT_ATTRIBUTE;
 
+static void move_cursor(int row, int column);
+
 /* Clear the screen and initialize the I/O variables. */
 void io_init(void)
 {
@@ -57,18 +60,34 @@ void io_init(void)
     // The 32-bit kernel usually prints one line.
     cursor.x = 0;
     cursor.y = 1;
+    move_cursor(cursor.y, cursor.x);
+}
+
+static void move_cursor(int row, int column)
+{
+    int position = (row * 80) + column;
+ 
+    // Cursor LOW port to vga INDEX register.
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t) (position & 0xFF));
+
+    // Cursor HIGH port to vga INDEX register.
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t) ((position >> 8) & 0xFF));
 }
 
 // Print a newline.
 static void newline()
 {
     cursor.y++;
-    cursor.x = 0;
+    cursor.x = 0;  
 
     if (cursor.y > SCREEN_ROWS)
     {
         // FIXME: implement scrolling please. :-)
-    }        
+    }
+
+    move_cursor(cursor.y, cursor.x);
 }
 
 // Convert an uint64 to arbitrary base string format. The base can be anything between 2 (binary) and 36, since by then we
