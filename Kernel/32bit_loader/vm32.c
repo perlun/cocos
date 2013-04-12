@@ -205,7 +205,9 @@ void vm_print_memory_mapping()
         {
             pte_t *pt = (pte_t *) (uint32_t) (pd[pd_index].base_address * VM_4KIB_PAGE_SIZE);
             
-            //        io_print_formatted("Virtual page %u is mapped to physical page %u.\n", virtual_page, pt[pt_index].page_base_address);
+#ifdef VM_DEBUG            
+            io_print_formatted("Virtual page %u is mapped to physical page %u.\n", virtual_page, pt[pt_index].page_base_address);
+#endif
             io_print_formatted("PT: %X\n", pt[pt_index]);
         }
     }
