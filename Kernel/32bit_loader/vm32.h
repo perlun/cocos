@@ -1,13 +1,12 @@
 /*
- * $Id$
- *
- * vm.h - Virtual Memory prototypes
+ * vm32.h - Virtual Memory prototypes
  *
  * Author: Per Lundberg <per@halleluja.nu> 
- */
+ * Copyright: © 2008, 2013 Per Lundberg
+*/
 
-#ifndef __VM_H__
-#define __VM_H__
+#ifndef __VM32_H__
+#define __VM32_H__
 
 #include "stdint.h"
 
@@ -18,4 +17,4 @@
  */
 extern void vm_setup_paging_structures(uint64_t available_memory);
 
-#endif // !__VM_H__
+#endif // !__VM32_H__
