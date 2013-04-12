@@ -4,14 +4,14 @@
  * vm.c - Virtual Memory-related functions.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
- * Copyright: (C) 2008-2009 Per Lundberg
+ * Copyright: © 2008-2009, 2013 Per Lundberg
  */
 
 #include "common/misc.h"
 #include "common/vm.h"
-#include "io.h"
+#include "io32.h"
 #include "memory.h"
-#include "vm.h"
+#include "vm32.h"
 
 // Virtual memory is set up by this file.
 //
