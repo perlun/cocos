@@ -36,4 +36,5 @@ clean:
 install: all
 	$(INSTALL) $(KERNEL) $(TARGET_PATH)
 
+include ../Makefile.common
 include Makefile.dep
