@@ -9,10 +9,10 @@
 
 #include "common/misc.h"
 #include "64bit.h"
-#include "io.h"
+#include "io32.h"
 #include "math.h"
 #include "multiboot.h"
-#include "vm.h"
+#include "vm32.h"
 
 /*
  * This is where execution starts when the entry point code in start.S has finished setting the most fundamental parts up. 
@@ -24,7 +24,6 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
 {
     io_init();
     io_print_line("cocOS32 version 2013 loading...");
-    io_print_line("Compiled from changset " CHANGESET);
 
     if (magic != 0x2BADB002)
     {
