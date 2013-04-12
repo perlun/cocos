@@ -11,7 +11,6 @@
 #define __IO_H__ 1
 
 extern void io_init ();
-extern void io_leet_print(const char *string);
 extern void io_print(const char *string);
 extern void io_print_line(const char *string);
 extern void io_print_formatted(const char *format_string, ...);

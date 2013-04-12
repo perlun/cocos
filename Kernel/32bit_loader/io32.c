@@ -146,49 +146,6 @@ static void number_to_string_uint32(uint32_t value, int base, char *output)
     number_to_string_uint64(value, base, output);
 }
 
-static void io_sleep()
-{
-    // Obviously, this method of generating a delay is quite lousy, it should at least be calibrated somehow... Using I/O
-    // in() is probably a much better way if we want to do it at least a whee bit better :-)
-    for (int i = 0; i < 3000; i++)
-    {
-        int x = 42;
-        x++;
-        x--;
-        x = x * 23;
-    }
-}
-
-/*
- * Print a string to the screen, 31337-style. :-)
- *
- * @param string the string to print.
- */
-void io_leet_print(const char *string)
-{
-    for (int i = 0; string[i] != '\0'; i++)
-    {
-        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].character = string[i];
-        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].attribute = 0x03;
-
-        io_sleep();
-
-        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].character = string[i];
-        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].attribute = 0x07;
-
-        io_sleep();
-
-        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].character = string[i];
-        screen[(cursor.y * SCREEN_COLUMNS) + cursor.x].attribute = 0x0F;
-        cursor.x++;
-
-        if (cursor.x == SCREEN_COLUMNS)
-        {
-            newline();
-        }
-    }
-}
-
 /*
  * Print a character to the screen.
  *
