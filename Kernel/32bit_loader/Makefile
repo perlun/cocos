@@ -5,17 +5,16 @@
 # Copyright: © 2008-2009, 2013 Per Lundberg
 #
 
-CHANGESET = $(shell hg id -q)
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
-CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I.. -DCHANGESET=\"$(CHANGESET)\"
+CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I..
 LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000
 
 # No user-serviceable parts below this line. :-)
 
 LINK = $(CC)
 KERNEL = cocOS32.bin
-KERNEL_OBJS = start.o io.o 64bit.o main.o vm.o compiler_rt/udivdi3.o compiler_rt/umoddi3.o
+KERNEL_OBJS = start.o io32.o 64bit.o main32.o vm32.o compiler_rt/udivdi3.o compiler_rt/umoddi3.o
 
 all: Makefile.dep $(KERNEL)
 
@@ -26,7 +25,7 @@ $(KERNEL): $(KERNEL_OBJS)
 	$(LINK) $(LDFLAGS) $(KERNEL_OBJS) -o $(KERNEL)
 
 clean:
-	rm -f $(KERNEL) $(KERNEL_OBJS)
+	rm -f $(KERNEL) $(KERNEL_OBJS) Makefile.dep
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $(@) $<
