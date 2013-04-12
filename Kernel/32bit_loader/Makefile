@@ -7,7 +7,6 @@
 
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
-CFLAGS = $(AS_FLAGS) --std=gnu99 -ggdb -I..
 LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000
 
 # No user-serviceable parts below this line. :-)
