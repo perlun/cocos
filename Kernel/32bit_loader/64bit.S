@@ -135,18 +135,6 @@ has_long_mode:
 
         .code64
 _64bit_entry_point:
-        // Print a simple message indicating that the 64-bit initialization was successful.
-        mov     edi, 0x00b8000 + (80 * 2)
-        //mov     esi, _64bit_initialized_message
-        jmp     _end_of_64print_loop
-        
-_64print_loop:
-        lodsb
-        jz        _end_of_64print_loop
-        stosb
-        jmp     _64print_loop
-
-_end_of_64print_loop:
         
         // Now, call the 64-bit kernel. When this method (_64bit_init) was called, we received an argument that
         // is a pointed to the Multiboot header. We want to pass this header on to the 64-bit kernel. Now, for those of you
@@ -167,9 +155,6 @@ _end_of_64print_loop:
         .data
 _non64bit_cpu_message:      
         .asciz  "The CPU does not support 64-bit mode. Kernel halted."
-
-_64bit_initialized_message:
-        .asciz  "64-bit mode successfully initialized."
         
         // Reference to the gdt , which we load so we can perform the jump into hyperspace... ehh, I mean, 64-bit code. :-)
         // We set the limit to 0xFFFF = 
@@ -183,4 +168,3 @@ gdt_pointer:
 gdt:    .quad   0x0000000000000000      // Null descriptor.
         .quad   0x0020980000000000      // Code descriptor..
         .quad   0x0000900000000000      // Data descriptor..
-        
