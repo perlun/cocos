@@ -37,10 +37,8 @@ void main(multiboot_info_t *multiboot_info, uint64_t upper_memory_limit)
     
     vm_init (upper_memory_limit);
 
-    io_print_formatted("Multiboot command line: %u, %x\n", (uint64_t) &multiboot_info->command_line,
-                       (uint64_t) &multiboot_info->command_line);
-    io_print((const char *) (uint64_t) multiboot_info->command_line);
-    io_print("\n");
+    io_print("Kernel command line: ");
+    io_print(KERNEL_COMMAND_LINE);
 
     while (1 == 1);
 }

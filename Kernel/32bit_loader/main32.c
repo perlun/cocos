@@ -12,6 +12,7 @@
 #include "io32.h"
 #include "math.h"
 #include "multiboot32.h"
+#include "string32.h"
 #include "vm32.h"
 
 /*
@@ -92,6 +93,8 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
         io_print_line("cocOS requires a Multiboot kernel that provides memory information. Halting.");
         HALT();
     }
+
+    string_copy(KERNEL_COMMAND_LINE, (char *) multiboot_info->command_line);
 
     // Alright, let's get moving. What we do now is set up basic data structures to be able to activate the ultra-cool amd64
     // "long mode". :-) But first, we will need to detect that the CPU is actually a 64-bit CPU, and similar.
