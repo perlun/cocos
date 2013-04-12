@@ -54,7 +54,7 @@ void io_init(void)
 {
     screen = (console_character_t *) VIDEO_MEMORY_BASE;
     
-    // The 32-bit kernel usually prints one line, so we start one line down...
+    // The 32-bit kernel usually prints one line.
     cursor.x = 0;
     cursor.y = 1;
 }
@@ -147,12 +147,11 @@ static void io_sleep()
 {
     // Obviously, this method of generating a delay is quite lousy, it should at least be calibrated somehow... Using I/O
     // in() is probably a much better way if we want to do it at least a whee bit better :-)
-    for (int i = 0; i < 3000; i++)
+    //
+    // TODO: Fix a better sleep algorithm. This one is very hardwired to my specific machine...
+    for (int i = 0; i < 100000; i++)
     {
-        int x = 42;
-        x++;
-        x--;
-        x = x * 23;
+        asm("inb $0x20");
     }
 }
 
