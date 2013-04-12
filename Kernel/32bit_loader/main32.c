@@ -79,8 +79,6 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
             // need to add 4 here to get it right.
             index += memory_map->size + 4;
         }
-
-        io_print_formatted("%X\n", available_memory);
     }
     else if (multiboot_info->flags.has_memory_info)
     {
