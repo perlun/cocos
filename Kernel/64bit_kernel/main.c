@@ -39,6 +39,7 @@ void main(multiboot_info_t *multiboot_info, uint64_t upper_memory_limit)
 
     io_print("Kernel command line: ");
     io_print(KERNEL_COMMAND_LINE);
+    io_print("\n");
 
     while (1 == 1);
 }
