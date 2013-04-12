@@ -1,14 +1,12 @@
 /* 
- * $Id$
- *
  * string.h - simple string functions.
  *
  * Author: Per Lundberg <per@halleluja.nu>
- * Copyright: (C) 2008 Per Lundberg
+ * Copyright: © 2008, 2013 Per Lundberg
  */
 
-#ifndef __STRING_H__
-#define __STRING_H__ 1
+#ifndef __STRING32_H__
+#define __STRING32_H__ 1
 
 /**
  * Copy the source string to the target. The source string is presumed to be zero-terminated; the target string will
@@ -28,4 +26,4 @@ static inline void string_copy(char *target, const char *source)
     target[i] = '\0';
 }
 
-#endif /* !__STRING_H__ */
+#endif /* !__STRING32_H__ */

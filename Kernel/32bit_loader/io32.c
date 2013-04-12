@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 #include "memory.h"
-#include "string.h"
+#include "string32.h"
 
 /* Constants */
 /* The number of columns. */
