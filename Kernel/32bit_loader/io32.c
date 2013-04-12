@@ -52,7 +52,8 @@ static uint8_t current_attribute = KERNEL_DEFAULT_ATTRIBUTE;
 void io_init()
 {
     screen = (console_character_t *) VIDEO_MEMORY_BASE;
-    
+    memory_zero(screen, SCREEN_ROWS * SCREEN_COLUMNS);
+
     cursor.x = 0;
     cursor.y = 0;
 }
