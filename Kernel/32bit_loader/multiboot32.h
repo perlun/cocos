@@ -1,9 +1,10 @@
 /*
  * $Id$
  *
- * multiboot.h - Multiboot defines/constants and data structures.
+ * multiboot32.h - Multiboot defines/constants and data structures.
  *
- * Author: Per Lundberg <per@halleluja.nu> 
+ * Author: Per Lundberg <per@halleluja.nu>
+ * Copyright: © 2008, 2013 Per Lundberg
  */
 
 /* This is to make sure that the assembly files can still include multiboot.h without getting compilation errors. */

@@ -11,7 +11,7 @@
 #include "64bit.h"
 #include "io32.h"
 #include "math.h"
-#include "multiboot.h"
+#include "multiboot32.h"
 #include "vm32.h"
 
 /*

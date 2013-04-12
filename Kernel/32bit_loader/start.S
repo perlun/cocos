@@ -1,7 +1,14 @@
-/* start.S - entry point for the kernel. */
-/* Copyright (C) 2008  Per Lundberg */
+/*
+ * start.S - assembly language entry point for the kernel.
+ *
+ * Author: Per Lundberg <per@halleluja.nu> 
+ * Copyright © 2008, 2013 Per Lundberg
+ */
 
-#include "multiboot.h"      
+#include "multiboot32.h"      
+
+        // TODO: Rewrite using .intel_syntax some day. Alternatively, consider switching over to NASM altogether (but it makes
+        // cross-compiling from Mac slightly more awkward, since you need a cross-NASM also in addition to gcc and binutils).
 
         /* The size of our kernel stack (16 KiB, 4 x 4 KiB pages). */
         #define STACK_SIZE			0x4000
