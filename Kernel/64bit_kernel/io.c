@@ -183,6 +183,8 @@ void io_leet_print(const char *string)
             newline();
         }
     }
+
+    newline();
 }
 
 /*
