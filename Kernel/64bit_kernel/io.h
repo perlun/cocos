@@ -1,10 +1,8 @@
 /* 
- * $Id$
- *
  * io.h - basic I/O support. (really only output, no input is supported. :-)
  *
  * Author: Per Lundberg <per@halleluja.nu>
- * Copyright: (C) 2008 Per Lundberg
+ * Copyright: © 2008, 2013 Per Lundberg
  */
 
 #ifndef __IO_H__
