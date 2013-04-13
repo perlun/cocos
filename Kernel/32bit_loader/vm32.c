@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * vm.c - Virtual Memory-related functions.
+ * vm32.c - Virtual Memory-related functions.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
  * Copyright: © 2008-2009, 2013 Per Lundberg
@@ -36,10 +34,10 @@
 
 // Paging structures. These will need to be individualized for the threads later on (since each thread will need to have
 // parts of its own address space thread-local, we need to duplicate all of those actually).
-static pml4e_t *pml4 = (pml4e_t *)VM_STRUCTURES_PML4_ADDRESS;
-static pdpe_t *pdp = (pdpe_t *)VM_STRUCTURES_PDP_ADDRESS;
+static pml4e_t *pml4 = (pml4e_t *) VM_STRUCTURES_PML4_ADDRESS;
+static pdpe_t *pdp = (pdpe_t *) VM_STRUCTURES_PDP_ADDRESS;
 static pde_t *pd;
-static pte_t *low_pt = (pte_t *)VM_STRUCTURES_LOW_PAGE_TABLE_ADDRESS;
+static pte_t *low_pt = (pte_t *) VM_STRUCTURES_LOW_PAGE_TABLE_ADDRESS;
 
 /**
  * Map a physical page into the virtual memory zone reserved for "physical" address space. ("identity mapped" = 1-to-1, each
@@ -146,7 +144,6 @@ static void vm_map_physical_memory(uint64_t virtual_page, uint64_t physical_page
             low_pt[pt_index].pwt = 1;
             low_pt[pt_index].global = 1;
             low_pt[pt_index].page_base_address = physical_page;
-
 
             break;
         }
