@@ -98,8 +98,7 @@ has_long_mode:
         rep     stosd
                 
         // Load the address of this newly set up paging structure into CR3.
-//      mov     eax, 0xA000
-        mov     eax, 0 //VM_STRUCTURES_PML4_ADDRESS
+        mov     eax, VM_STRUCTURES_PML4_ADDRESS
         mov     cr3, eax
        
         // Enable long mode (set EFER.LME = 1).
@@ -115,13 +114,13 @@ has_long_mode:
 
         // We are now in 32-bit "compatibility mode". Let's do one more thing before jumping into 64-bit mode:  Set up
         // a new GDT, Global Descriptor Table. First, copy it over to its designated place.
-        /* FIXME: This doesn't work, for some reason... Anyway, we leave it like this
-           for now. This means the GDT will be in the 32-bit kernel data area, so we can't just wipe it later before
-           we have established our own GDT in the proper place. */
-/*      mov     esi, dword ptr gdt
+.att_syntax
+        movl    $gdt, %esi              // Couldn't manage to successfully write this in Intel syntax... It always produced
+                                        // invalid machine code, trying to push the value located at [gdt] rather than the address.
+.intel_syntax noprefix
         mov     edi, 0x1000
         mov     ecx, 8 * 3
-        rep     movsb */
+        rep     movsb
        
         // ...then, load the GDTR register.
         lgdt    gdt_pointer
@@ -160,8 +159,7 @@ _non64bit_cpu_message:
         // We set the limit to 0xFFFF = 
 gdt_pointer:
         .word   3 * 8                   // The size of the GDT, in bytes. We only need three descriptors à 8 bytes.
-        .long   gdt                     // The location of the GDT. We place it at the second page in memory (4 KiB).
-        //.long   0x1000               // This one doesn't work, as mentioned earlier.
+        .long   0x1000                  // The location of the GDT. We place it at the second page in memory (4 KiB).
         
         // FIXME: having these hardwired like this makes it extremely ugly and hard to see what this says... Perhaps we
         // should even create the GDT from a C function to make it more obvious what they look like.

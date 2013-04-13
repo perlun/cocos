@@ -20,6 +20,6 @@
 // TODO: Horribly hardwired for small-memory configurations at the moment. Will overwrite the VM structures if we go above 1024
 // MiB of RAM... vm32.c should be patched to calculate this and return it. I did an attempt but managed to screw up the code
 // completely, making the CPU reset every time you go to long mode... :)
-#define KERNEL_COMMAND_LINE (char *) 0x4000
+#define KERNEL_COMMAND_LINE (char *) 0x6000
 
 #endif // !__MISC_H__

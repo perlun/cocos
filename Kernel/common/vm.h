@@ -41,7 +41,7 @@
 // memory available in the system -- in essence, each 512 GiB block of RAM will have its own PDP table. 
 //
 // The kernel PML4 is set up before paging has been activated, so the initial setup won't be a problem.
-#define VM_STRUCTURES_BASE_ADDRESS      0x0
+#define VM_STRUCTURES_BASE_ADDRESS      0x2000
 
 // The PML4 is placed first in the paging structures zone. There is always only one PML4 table. It handles bit 39-47 in the
 // virtual address space. A PML4, just like a PDP, PD or PT is always 4 KiB large.
