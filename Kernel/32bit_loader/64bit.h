@@ -1,10 +1,8 @@
 /*
- * $Id$
- *
  * 64bit.h - prototypes for 64bit.S, the 64-bit mode initialization code.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
- * Copyright: (C) 2008-2009 Per Lundberg
+ * Copyright: © 2008-2009, 2013 Per Lundberg
  */
 
 #ifndef __64BIT_H__
