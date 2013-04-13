@@ -5,13 +5,11 @@
 # Copyright: © 2008-2009, 2013 Per Lundberg
 #
 
+include ../Makefile.common
+
 INSTALL = install
 AS_FLAGS = -c -m64 -Wall -Werror -Wno-main
 CHANGESET = $(shell git rev-parse HEAD)
-
-# The -DKERNEL_HACKER flag makes the kernel be compiled in a mode only really suitable for kernel hackers; information that can be
-# useless to other people will be printed out in this mode, for example.
-CFLAGS = $(AS_FLAGS) --std=gnu99 -DKERNEL_HACKER -I.. -DCHANGESET=\"$(CHANGESET)\"
 
 LDFLAGS = -m64 -nostdlib -Wl,--oformat -Wl,binary -Wl,-N -Wl,-Ttext -Wl,200000 -e main
 
@@ -41,5 +39,4 @@ clean:
 install: all
 	$(INSTALL) $(KERNEL) $(TARGET_PATH)
 
-include ../Makefile.common
 include Makefile.dep

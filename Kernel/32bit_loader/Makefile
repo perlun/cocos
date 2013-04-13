@@ -5,6 +5,8 @@
 # Copyright: © 2008-2009, 2013 Per Lundberg
 #
 
+include ../Makefile.common
+
 INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
 LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000
@@ -35,5 +37,4 @@ clean:
 install: all
 	$(INSTALL) $(KERNEL) $(TARGET_PATH)
 
-include ../Makefile.common
 include Makefile.dep
