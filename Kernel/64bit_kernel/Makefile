@@ -20,7 +20,7 @@ KERNEL_OBJS = main.o io.o vm.o
 
 all: Makefile.dep $(KERNEL)
 
-Makefile.dep:
+Makefile.dep: *.c *.h
 	$(CC) $(CFLAGS) -M *.c > $(@)
 
 $(KERNEL): $(KERNEL_OBJS)

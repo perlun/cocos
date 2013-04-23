@@ -19,7 +19,7 @@ KERNEL_OBJS = start.o io32.o 64bit.o main32.o vm32.o compiler_rt/udivdi3.o compi
 
 all: Makefile.dep $(KERNEL)
 
-Makefile.dep:
+Makefile.dep: *.c *.h
 	$(CC) $(CFLAGS) -M *.c > $(@)
 
 $(KERNEL): $(KERNEL_OBJS)
