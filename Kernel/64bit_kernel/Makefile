@@ -9,7 +9,6 @@ include ../Makefile.common
 
 INSTALL = install
 AS_FLAGS = -c -m64 -Wall -Werror -Wno-main
-CHANGESET = $(shell git rev-parse HEAD)
 
 LDFLAGS = -m64 -nostdlib -Wl,--oformat -Wl,binary -Wl,-N -Wl,-Ttext -Wl,200000 -e main
 
