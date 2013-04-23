@@ -114,10 +114,7 @@ has_long_mode:
 
         // We are now in 32-bit "compatibility mode". Let's do one more thing before jumping into 64-bit mode:  Set up
         // a new GDT, Global Descriptor Table. First, copy it over to its designated place.
-.att_syntax
-        movl    $gdt, %esi              // Couldn't manage to successfully write this in Intel syntax... It always produced
-                                        // invalid machine code, trying to push the value located at [gdt] rather than the address.
-.intel_syntax noprefix
+        mov     esi, offset gdt
         mov     edi, 0x1000
         mov     ecx, 8 * 3
         rep     movsb
