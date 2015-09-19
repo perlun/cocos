@@ -97,6 +97,12 @@ Low-level Mappings
   - Page Map Level 4 index 0(second page directory)
     # One page director can hold information... FIXME: this sentence is unfinished. :-) 
 
+Multiboot memory layout
+-----------------------
+
+- 32-bit loader: Gets loaded at 0x100000 (1 MiB).
+- 64-bit kernel: Gets loaded at 0x200000 (2 MiB).
+
 Physical Memory Structure
 -------------------------
 Please note that these areas are "zones" rather than actual usage. If only 16 KiB of paging structures are needed, only
