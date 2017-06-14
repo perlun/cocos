@@ -1,8 +1,8 @@
 /*
  * main.c - C entry point for the 32-bit kernel loader.
  *
- * Author: Per Lundberg <per@halleluja.nu> 
- * Copyright: © 2008, 2013 Per Lundberg
+ * Author: Per Lundberg <per@halleluja.nu>
+ * Copyright: © 2008, 2013, 2017 Per Lundberg
  */
 
 #include <stdint.h>
@@ -16,15 +16,15 @@
 #include "vm32.h"
 
 /*
- * This is where execution starts when the entry point code in start.S has finished setting the most fundamental parts up. 
+ * This is where execution starts when the entry point code in start.S has finished setting the most fundamental parts up.
  *
- * @param magic The magic number provided to us from the boot loader. 
+ * @param magic The magic number provided to us from the boot loader.
  * @param multiboot_info The multiboot info, provided to us from the boot loader.
  */
 void main (uint32_t magic, multiboot_info_t *multiboot_info)
 {
     io_init();
-    io_print_line("cocOS32 version 2013 loading...");
+    io_print_line("cocOS32 version 0.1.0 loading...");
 
     if (magic != 0x2BADB002)
     {
@@ -107,6 +107,6 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
 
     // We now have VM set up, so let's call the aforementioned 64-bit initialization function.
     //
-    // Because of its nature, this function will never return. If 64-bit initialization fails, it will halt the CPU. 
+    // Because of its nature, this function will never return. If 64-bit initialization fails, it will halt the CPU.
     _64bit_init(multiboot_info, available_memory);
 }

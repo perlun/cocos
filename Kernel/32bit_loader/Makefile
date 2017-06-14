@@ -2,12 +2,11 @@
 # This is the makefile for the 32-bit loader part of the cocOS kernel.
 #
 # Author: Per Lundberg <per@halleluja.nu>
-# Copyright: © 2008-2009, 2013 Per Lundberg
+# Copyright: © 2008-2009, 2013, 2017 Per Lundberg
 #
 
 include ../Makefile.common
 
-INSTALL = install
 AS_FLAGS = -c -m32 -Wall -Werror -Wno-main -I..
 LDFLAGS = -m32 -nostdlib -Wl,-N -Wl,-Ttext -Wl,100000
 
@@ -35,6 +34,6 @@ clean:
 	$(CC) $(AS_FLAGS) -o $(@) $<
 
 install: all
-	$(INSTALL) $(KERNEL) $(TARGET_PATH)
+	mcopy -o $(KERNEL) $(TARGET_MTOOLS_VOLUME)
 
 include Makefile.dep

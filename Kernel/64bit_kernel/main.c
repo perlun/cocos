@@ -1,11 +1,11 @@
-/* 
+/*
  * $Id$
  *
  * main.c - the main() method of the kernel. As you would expect, this is where the execution of the cosmOS kernel
  * begins.
  *
  * Author: Per Lundberg <per@halleluja.nu>
- * Copyright: © 2008, 2013 Per Lundberg
+ * Copyright: © 2008, 2013, 2017 Per Lundberg
  */
 
 #include "common/misc.h"
@@ -17,7 +17,7 @@
 void main(multiboot_info_t *multiboot_info, uint64_t upper_memory_limit)
 {
     io_init();
-    io_leet_print("cocOS64 version 2013 loading...");
+    io_leet_print("cocOS64 version 0.1.0 loading...");
 #ifdef CHANGESET
     io_print_line("Compiled from changeset " CHANGESET);
 #endif
@@ -34,7 +34,7 @@ void main(multiboot_info_t *multiboot_info, uint64_t upper_memory_limit)
     // parameter, we know how much physical memory to map in the lower VM zone (see the cocOS VM Specification for more
     // information about the VM zones). When this memory is mapped, we can then read the Multiboot memory map once again to
     // know which pages to flag as usable and which ones that are reserved by hardware.
-    
+
     vm_init (upper_memory_limit);
 
     io_print("Kernel command line: ");
