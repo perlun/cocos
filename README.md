@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/perlun/cocos.svg?branch=master)](https://travis-ci.org/perlun/cocos)
+
 # README
 
 Welcome to cocOS. This is not intended to be a "real" operating system, which it indeed will never be; writing an operating system (let alone the kernel) is a full-time job for a number of people for a significant number of months, if not years. Rather, this is my personal playground, toying around with the 64-bit architecture just for fun.
