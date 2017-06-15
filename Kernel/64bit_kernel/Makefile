@@ -2,12 +2,11 @@
 # This is the makefile for the 64-bit cocOS kernel.
 #
 # Author: Per Lundberg <per@halleluja.nu>
-# Copyright: © 2008-2009, 2013 Per Lundberg
+# Copyright: © 2008-2009, 2013, 2017 Per Lundberg
 #
 
 include ../Makefile.common
 
-INSTALL = install
 AS_FLAGS = -c -m64 -Wall -Werror -Wno-main
 
 LDFLAGS = -m64 -nostdlib -Wl,--oformat -Wl,binary -Wl,-N -Wl,-Ttext -Wl,200000 -e main
@@ -36,6 +35,6 @@ clean:
 	$(CC) $(AS_FLAGS) -o $(@) $<
 
 install: all
-	$(INSTALL) $(KERNEL) $(TARGET_PATH)
+	mcopy -o $(KERNEL) $(TARGET_MTOOLS_VOLUME)
 
 include Makefile.dep
