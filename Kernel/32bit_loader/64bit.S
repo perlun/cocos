@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * 64bit.S - code for entering 64-bit mode.
  *
  * Author: Per Lundberg <per@halleluja.nu> 
@@ -47,28 +45,9 @@ has_long_mode:
         bts     eax, 5
         mov     cr4, eax
        
-        // Create the long-mode page tables, and initialize the 64-bit CR3 (page-table base address) to point to the
-        // base of the PML4 page table. The PML4 page table must be located below 4 GiB because only 32 bits of CR3
-        // are loaded when the processor is in 32-bit mode.
-
-        // The paging data structures are placed at A000 (in other words, at 40 KiB) and onwards. Please note that those
-        // sturctures will be wiped by the 64-bit kernel; they are ONLY used to be able to jump to the 64-bit kernel code.
-
-        // Page Map Level 4:
-        // dq 0x000000000000B00F                ;00000000 00000000 00000000 00000000 00000000 00000000 10010000 00001111
-        // times 511 dq 0x0000000000000000
-
-        // Page Directory Pointer:
-        // dq 0x000000000000C00F                ;00000000 00000000 00000000 00000000 00000000 00000000 10100000 00001111
-        // times 511 dq 0x0000000000000000
-
-        // Page Directory: :
-        // dq 0x000000000000018F                ;00000000 00000000 00000000 00000000 00000000 00000000 00000001 10001111
-
-        // times 511 dq 0x0000000000000000
-
-        // This defines one 2MB identity-mapped page at the start of memory (so we can access the first 2 megs of
-        // RAM just like we would if paging/long mode was not in place).
+        // This defines one 2 MiB identity-mapped page at the start of memory (so we can access the first 2 megs of
+        // RAM just like we would if paging/long mode was not in place). The kernel code and data is assumed to be
+        // located within this page, as well as the 64-bit kernel.
 
         // First the PML4.
         cld
@@ -138,7 +117,7 @@ _64bit_entry_point:
         // On amd64, you don't push integers on the stack. Instead, you pass it using a register. There is a list of the order
         // of those registers specified in the System V ABI for AMD64, located at this URL:
         //
-        // http://www.x86-64.org/documentation/abi-0.99.pdf
+        // http://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf
         //
         // For now, we only need to know and accept that RDI is the first and RSI is the second integer-parameter
         // register. :)
@@ -155,7 +134,7 @@ _non64bit_cpu_message:
         // Reference to the gdt , which we load so we can perform the jump into hyperspace... ehh, I mean, 64-bit code. :-)
         // We set the limit to 0xFFFF = 
 gdt_pointer:
-        .word   3 * 8                   // The size of the GDT, in bytes. We only need three descriptors à 8 bytes.
+        .word   3 * 8                   // The size of the GDT, in bytes. We only need three descriptors Ã  8 bytes.
         .long   0x1000                  // The location of the GDT. We place it at the second page in memory (4 KiB).
         
         // FIXME: having these hardwired like this makes it extremely ugly and hard to see what this says... Perhaps we
