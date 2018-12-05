@@ -83,7 +83,7 @@ void main (uint32_t magic, multiboot_info_t *multiboot_info)
     }
     else if (multiboot_info->flags.has_memory_info)
     {
-        // This is a bit poor; we might miss some memory but doing like this. The alternative would be to not do any
+        // This is a bit poor; we might miss some memory by doing like this. The alternative would be to not do any
         // autodetection at all in this case and just halt (and perhaps let the memory size be overridable by means of a
         // kernel command line parameter).
         available_memory = (multiboot_info->memory_upper * 1024) + (1024 * 1024);
